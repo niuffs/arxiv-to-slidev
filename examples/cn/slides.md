@@ -8,7 +8,7 @@ transition: slide-left
 monaco: false
 lineNumbers: false
 katex: true
-routerMode: hash
+routerMode: history
 head:
   - style: |
       .slidev-page, .slidev-slide-content { overflow-y: scroll !important; }

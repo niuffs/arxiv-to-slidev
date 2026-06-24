@@ -42,7 +42,11 @@ Markdown 格式的幻灯片（如 Marp）格式单一，排版能力有限；而
 
 ### 示例
 
-- [中文版讨论班 PPT](https://niuffs.github.io/arxiv-to-slidev/cn/)
+为验证 Skill 效果，以 **ICML 2026** 论文为例：
+> [Rex: A Family of Reversible Exponential (Stochastic) Runge-Kutta Solvers](https://openreview.net/forum?id=8sw868HPho)  
+> LaTeX 源码：https://arxiv.org/abs/2502.08834
+
+- [中文版讨论班 PPT](https://niuffs.github.io/arxiv-to-slidev/cn/)  
 - [English Seminar PPT](https://niuffs.github.io/arxiv-to-slidev/en/)
 
 ### 安装
@@ -88,8 +92,12 @@ By leveraging the [Slidev project](https://github.com/slidevjs/slidev), this ski
 
 ### Examples
 
-- [Chinese Seminar PPT](https://niuffs.github.io/arxiv-to-slidev/cn/) (Rex Paper)
-- [English Seminar PPT](https://niuffs.github.io/arxiv-to-slidev/en/) (Rex Paper)
+To demonstrate the skill's effectiveness, we use the **ICML 2026** paper:
+> [Rex: A Family of Reversible Exponential (Stochastic) Runge-Kutta Solvers](https://openreview.net/forum?id=8sw868HPho)  
+> LaTeX source: https://arxiv.org/abs/2502.08834
+
+- [Chinese Seminar PPT](https://niuffs.github.io/arxiv-to-slidev/cn/)  
+- [English Seminar PPT](https://niuffs.github.io/arxiv-to-slidev/en/)
 
 ### Installation
 

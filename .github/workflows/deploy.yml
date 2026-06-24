@@ -1,4 +1,4 @@
-name: Deploy examples to GitHub Pages
+name: Deploy to GitHub Pages
 
 on:
   push:
@@ -27,121 +27,47 @@ jobs:
           node-version: 24
       - run: npm install -g @slidev/cli @slidev/theme-default
 
-      # 2) Build Chinese example
-      - name: Build CN example
+      # Build CN
+      - name: Build CN
         run: |
           cd examples/cn
-          npx slidev build slides.md --base /arxiv-to-slidev/examples/cn/
-          # Fix hash using a separate script file (avoids YAML/JSON escaping issues)
-          cat > /tmp/fix_hash.js << 'FIXEOF'
-          var fs = require('fs');
-          var html = fs.readFileSync('dist/index.html', 'utf8');
-          var script = '<script>' +
-            'var base=location.pathname.replace(/\\/[^\\/]+\\/?$/,"/");' +
-            '(function(){' +
-            'var push=history.pushState,rep=history.replaceState;' +
-            'history.pushState=function(s,t,u){' +
-            'if(u&&u.indexOf("#/arxiv-to-slidev/")>=0)' +
-            'u=u.replace(/\\/arxiv-to-slidev\\/examples\\/(cn|en)\\/+/g,"/");' +
-            'return push.call(this,s,t,u)};' +
-            'history.replaceState=function(s,t,u){' +
-            'if(u&&u.indexOf("#/arxiv-to-slidev/")>=0)' +
-            'u=u.replace(/\\/arxiv-to-slidev\\/examples\\/(cn|en)\\/+/g,"/");' +
-            'return rep.call(this,s,t,u)};' +
-            'var h=location.hash;' +
-            'if(h&&h.indexOf("/arxiv-to-slidev/")>=0)' +
-            'history.replaceState(null,"",base+"#/"+' +
-            'h.replace(/\\/arxiv-to-slidev\\/examples\\/(cn|en)\\/+/g,"/").replace("#/",""))' +
-            '})()</script>';
-          html = html.replace('</head>', script + '</head>');
-          fs.writeFileSync('dist/index.html', html);
-          console.log('Hash fix injected');
+          npx slidev build slides.md --base /arxiv-to-slidev/cn/
+          cat > /tmp/fix.js << 'FIXEOF'
+          var fs=require('fs'), h=fs.readFileSync('dist/index.html','utf8');
+          var s='<script>(function(){var p=history.pushState,r=history.replaceState;'+
+          'history.pushState=function(s,t,u){if(u&&u.indexOf("#/arxiv-to-slidev/")>=0)'+
+          'u=u.replace(/#\\/arxiv-to-slidev\\/cn\\//g,"#/");return p.call(this,s,t,u)};'+
+          'history.replaceState=function(s,t,u){if(u&&u.indexOf("#/arxiv-to-slidev/")>=0)'+
+          'u=u.replace(/#\\/arxiv-to-slidev\\/cn\\//g,"#/");return r.call(this,s,t,u)};'+
+          'var x=location.hash;if(x&&x.indexOf("/arxiv-to-slidev/")>=0)'+
+          'history.replaceState(null,"",location.pathname+"#/"+x.replace("#/","").replace(/\\/arxiv-to-slidev\\/cn\\//g,""))'+
+          '})()</script>';
+          fs.writeFileSync('dist/index.html',h.replace('</head>',s+'</head>'));
           FIXEOF
-          node /tmp/fix_hash.js
-          # Overwrite 404.html with SPA redirect
-          cat > dist/404.html << 'EOF404'
-          <!DOCTYPE html><html><head><meta charset="utf-8"><title>Redirecting</title><script>
-          var p=location.pathname.replace("/arxiv-to-slidev/examples/cn/","");if(p&&!p.startsWith("assets/"))location.replace("/arxiv-to-slidev/examples/cn/#/"+p);else location.replace("/arxiv-to-slidev/examples/cn/");
-          </script></head><body></body></html>
-          EOF404
-          mkdir -p ../../_site/examples/cn
-          cp -r dist/* ../../_site/examples/cn/
+          node /tmp/fix.js
+          mkdir -p ../../_site/cn && cp -r dist/* ../../_site/cn/
 
-      # 3) Build English example
-      - name: Build EN example
+      # Build EN
+      - name: Build EN
         run: |
           cd examples/en
-          npx slidev build slides.md --base /arxiv-to-slidev/examples/en/
-          # Fix hash using a separate script file (avoids YAML/JSON escaping issues)
-          cat > /tmp/fix_hash.js << 'FIXEOF'
-          var fs = require('fs');
-          var html = fs.readFileSync('dist/index.html', 'utf8');
-          var script = '<script>' +
-            'var base=location.pathname.replace(/\\/[^\\/]+\\/?$/,"/");' +
-            '(function(){' +
-            'var push=history.pushState,rep=history.replaceState;' +
-            'history.pushState=function(s,t,u){' +
-            'if(u&&u.indexOf("#/arxiv-to-slidev/")>=0)' +
-            'u=u.replace(/\\/arxiv-to-slidev\\/examples\\/(cn|en)\\/+/g,"/");' +
-            'return push.call(this,s,t,u)};' +
-            'history.replaceState=function(s,t,u){' +
-            'if(u&&u.indexOf("#/arxiv-to-slidev/")>=0)' +
-            'u=u.replace(/\\/arxiv-to-slidev\\/examples\\/(cn|en)\\/+/g,"/");' +
-            'return rep.call(this,s,t,u)};' +
-            'var h=location.hash;' +
-            'if(h&&h.indexOf("/arxiv-to-slidev/")>=0)' +
-            'history.replaceState(null,"",base+"#/"+' +
-            'h.replace(/\\/arxiv-to-slidev\\/examples\\/(cn|en)\\/+/g,"/").replace("#/",""))' +
-            '})()</script>';
-          html = html.replace('</head>', script + '</head>');
-          fs.writeFileSync('dist/index.html', html);
-          console.log('Hash fix injected');
+          npx slidev build slides.md --base /arxiv-to-slidev/en/
+          cat > /tmp/fix.js << 'FIXEOF'
+          var fs=require('fs'), h=fs.readFileSync('dist/index.html','utf8');
+          var s='<script>(function(){var p=history.pushState,r=history.replaceState;'+
+          'history.pushState=function(s,t,u){if(u&&u.indexOf("#/arxiv-to-slidev/")>=0)'+
+          'u=u.replace(/#\\/arxiv-to-slidev\\/en\\//g,"#/");return p.call(this,s,t,u)};'+
+          'history.replaceState=function(s,t,u){if(u&&u.indexOf("#/arxiv-to-slidev/")>=0)'+
+          'u=u.replace(/#\\/arxiv-to-slidev\\/en\\//g,"#/");return r.call(this,s,t,u)};'+
+          'var x=location.hash;if(x&&x.indexOf("/arxiv-to-slidev/")>=0)'+
+          'history.replaceState(null,"",location.pathname+"#/"+x.replace("#/","").replace(/\\/arxiv-to-slidev\\/en\\//g,""))'+
+          '})()</script>';
+          fs.writeFileSync('dist/index.html',h.replace('</head>',s+'</head>'));
           FIXEOF
-          node /tmp/fix_hash.js
-          # Overwrite 404.html with SPA redirect
-          cat > dist/404.html << 'EOF404'
-          <!DOCTYPE html><html><head><meta charset="utf-8"><title>Redirecting</title><script>
-          var p=location.pathname.replace("/arxiv-to-slidev/examples/en/","");if(p&&!p.startsWith("assets/"))location.replace("/arxiv-to-slidev/examples/en/#/"+p);else location.replace("/arxiv-to-slidev/examples/en/");
-          </script></head><body></body></html>
-          EOF404
-          mkdir -p ../../_site/examples/en
-          cp -r dist/* ../../_site/examples/en/
+          node /tmp/fix.js
+          mkdir -p ../../_site/en && cp -r dist/* ../../_site/en/
 
-      # 4) Create landing page
-      - name: Create landing page
-        run: |
-          cat > _site/index.html << 'EOF'
-          <!DOCTYPE html>
-          <html lang="zh-CN">
-          <head>
-            <meta charset="utf-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1">
-            <title>arxiv-to-slidev 示例</title>
-            <style>
-              body { font-family: system-ui, sans-serif; max-width: 640px; margin: 80px auto; padding: 0 20px; line-height: 1.6; color: #1a1b26; }
-              h1 { font-size: 1.6rem; margin-bottom: 0.5rem; }
-              p { color: #565a6e; }
-              ul { padding-left: 1.2rem; }
-              li { margin: 12px 0; }
-              a { color: #7c3aed; text-decoration: none; font-weight: 500; }
-              a:hover { text-decoration: underline; }
-              .badge { font-size: 0.75rem; background: #7c3aed; color: #fff; border-radius: 4px; padding: 2px 8px; margin-left: 6px; }
-            </style>
-          </head>
-          <body>
-            <h1>arxiv-to-slidev</h1>
-            <p>从 arXiv 论文 LaTeX 源码生成 Slidev 演示文稿的 Claude Code Skill</p>
-            <ul>
-              <li><a href="./examples/cn/">中文版讨论班 PPT</a> <span class="badge">Rex 论文</span></li>
-              <li><a href="./examples/en/">English Seminar PPT</a> <span class="badge">Rex Paper</span></li>
-            </ul>
-            <hr style="margin-top:40px;border:none;border-top:1px solid #e5e7eb;">
-            <p style="font-size:0.85rem;color:#9ca3af;">Generated by arxiv-to-slidev skill</p>
-          </body>
-          </html>
-          EOF
-
-      # 5) Upload and deploy
+      # Deploy
       - uses: actions/configure-pages@v4
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

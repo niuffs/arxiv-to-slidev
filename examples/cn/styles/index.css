@@ -1,0 +1,3 @@
+.slidev-slide-container { overflow: visible !important; }
+.slidev-slide-content { overflow: visible !important; }
+.slidev-page { overflow-y: scroll !important; }

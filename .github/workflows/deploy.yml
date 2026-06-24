@@ -32,14 +32,32 @@ jobs:
         run: |
           cd examples/cn
           npx slidev build slides.md --base /arxiv-to-slidev/examples/cn/
-          # Fix hash: intercept pushState to strip base path (using Node to avoid sed escaping)
-          node -e "
-          var fs=require('fs');
-          var h=fs.readFileSync('dist/index.html','utf8');
-          h=h.replace('</head>','<script>var b=location.pathname.replace(/\\/[^\\/]+\\/[^\\/]+\\$/,\"/\");(function(){var p=history.pushState,r=history.replaceState;history.pushState=function(s,t,u){if(u&&u.indexOf(\"#/arxiv-to-slidev/\")>=0)u=u.replace(/\\/arxiv-to-slidev\\/examples\\/(cn|en)\\/g,\"/\");return p.call(this,s,t,u)};history.replaceState=function(s,t,u){if(u&&u.indexOf(\"#/arxiv-to-slidev/\")>=0)u=u.replace(/\\/arxiv-to-slidev\\/examples\\/(cn|en)\\/g,\"/\");return r.call(this,s,t,u)};var h=location.hash;if(h&&h.indexOf(\"/arxiv-to-slidev/\")>=0)history.replaceState(null,\"\",b+\"#/\"+h.replace(/\\/arxiv-to-slidev\\/examples\\/(cn|en)\\/g,\"\").replace(\"#/\",\"\"))})()</script></head>');
-          fs.writeFileSync('dist/index.html',h);
-          console.log('Fixed hash');
-          "
+          # Fix hash using a separate script file (avoids YAML/JSON escaping issues)
+          cat > /tmp/fix_hash.js << 'FIXEOF'
+          var fs = require('fs');
+          var html = fs.readFileSync('dist/index.html', 'utf8');
+          var script = '<script>' +
+            'var base=location.pathname.replace(/\\/[^\\/]+\\/?$/,"/");' +
+            '(function(){' +
+            'var push=history.pushState,rep=history.replaceState;' +
+            'history.pushState=function(s,t,u){' +
+            'if(u&&u.indexOf("#/arxiv-to-slidev/")>=0)' +
+            'u=u.replace(/\\/arxiv-to-slidev\\/examples\\/(cn|en)\\/+/g,"/");' +
+            'return push.call(this,s,t,u)};' +
+            'history.replaceState=function(s,t,u){' +
+            'if(u&&u.indexOf("#/arxiv-to-slidev/")>=0)' +
+            'u=u.replace(/\\/arxiv-to-slidev\\/examples\\/(cn|en)\\/+/g,"/");' +
+            'return rep.call(this,s,t,u)};' +
+            'var h=location.hash;' +
+            'if(h&&h.indexOf("/arxiv-to-slidev/")>=0)' +
+            'history.replaceState(null,"",base+"#/"+' +
+            'h.replace(/\\/arxiv-to-slidev\\/examples\\/(cn|en)\\/+/g,"/").replace("#/",""))' +
+            '})()</script>';
+          html = html.replace('</head>', script + '</head>');
+          fs.writeFileSync('dist/index.html', html);
+          console.log('Hash fix injected');
+          FIXEOF
+          node /tmp/fix_hash.js
           # Overwrite 404.html with SPA redirect
           cat > dist/404.html << 'EOF404'
           <!DOCTYPE html><html><head><meta charset="utf-8"><title>Redirecting</title><script>
@@ -54,14 +72,32 @@ jobs:
         run: |
           cd examples/en
           npx slidev build slides.md --base /arxiv-to-slidev/examples/en/
-          # Fix hash: intercept pushState to strip base path (using Node to avoid sed escaping)
-          node -e "
-          var fs=require('fs');
-          var h=fs.readFileSync('dist/index.html','utf8');
-          h=h.replace('</head>','<script>var b=location.pathname.replace(/\\/[^\\/]+\\/[^\\/]+\\$/,\"/\");(function(){var p=history.pushState,r=history.replaceState;history.pushState=function(s,t,u){if(u&&u.indexOf(\"#/arxiv-to-slidev/\")>=0)u=u.replace(/\\/arxiv-to-slidev\\/examples\\/(cn|en)\\/g,\"/\");return p.call(this,s,t,u)};history.replaceState=function(s,t,u){if(u&&u.indexOf(\"#/arxiv-to-slidev/\")>=0)u=u.replace(/\\/arxiv-to-slidev\\/examples\\/(cn|en)\\/g,\"/\");return r.call(this,s,t,u)};var h=location.hash;if(h&&h.indexOf(\"/arxiv-to-slidev/\")>=0)history.replaceState(null,\"\",b+\"#/\"+h.replace(/\\/arxiv-to-slidev\\/examples\\/(cn|en)\\/g,\"\").replace(\"#/\",\"\"))})()</script></head>');
-          fs.writeFileSync('dist/index.html',h);
-          console.log('Fixed hash');
-          "
+          # Fix hash using a separate script file (avoids YAML/JSON escaping issues)
+          cat > /tmp/fix_hash.js << 'FIXEOF'
+          var fs = require('fs');
+          var html = fs.readFileSync('dist/index.html', 'utf8');
+          var script = '<script>' +
+            'var base=location.pathname.replace(/\\/[^\\/]+\\/?$/,"/");' +
+            '(function(){' +
+            'var push=history.pushState,rep=history.replaceState;' +
+            'history.pushState=function(s,t,u){' +
+            'if(u&&u.indexOf("#/arxiv-to-slidev/")>=0)' +
+            'u=u.replace(/\\/arxiv-to-slidev\\/examples\\/(cn|en)\\/+/g,"/");' +
+            'return push.call(this,s,t,u)};' +
+            'history.replaceState=function(s,t,u){' +
+            'if(u&&u.indexOf("#/arxiv-to-slidev/")>=0)' +
+            'u=u.replace(/\\/arxiv-to-slidev\\/examples\\/(cn|en)\\/+/g,"/");' +
+            'return rep.call(this,s,t,u)};' +
+            'var h=location.hash;' +
+            'if(h&&h.indexOf("/arxiv-to-slidev/")>=0)' +
+            'history.replaceState(null,"",base+"#/"+' +
+            'h.replace(/\\/arxiv-to-slidev\\/examples\\/(cn|en)\\/+/g,"/").replace("#/",""))' +
+            '})()</script>';
+          html = html.replace('</head>', script + '</head>');
+          fs.writeFileSync('dist/index.html', html);
+          console.log('Hash fix injected');
+          FIXEOF
+          node /tmp/fix_hash.js
           # Overwrite 404.html with SPA redirect
           cat > dist/404.html << 'EOF404'
           <!DOCTYPE html><html><head><meta charset="utf-8"><title>Redirecting</title><script>

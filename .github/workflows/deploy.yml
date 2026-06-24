@@ -32,8 +32,14 @@ jobs:
         run: |
           cd examples/cn
           npx slidev build slides.md --base /arxiv-to-slidev/examples/cn/
-          # Fix hash routing: strip base path from hash (using slice, no regex escaping issues)
-          sed -i 's|</head>|<script>var b="/arxiv-to-slidev/examples/cn/";var h=location.hash;if(h.indexOf(b)>=0)history.replaceState(null,"",b+"#/"+h.replace(b,"").slice(2));window.addEventListener("hashchange",function(){var h2=location.hash;if(h2.indexOf(b)>=0)history.replaceState(null,"",b+"#/"+h2.replace(b,"").slice(2))})</script></head>|' dist/index.html
+          # Fix hash: intercept pushState to strip base path (using Node to avoid sed escaping)
+          node -e "
+          var fs=require('fs');
+          var h=fs.readFileSync('dist/index.html','utf8');
+          h=h.replace('</head>','<script>var b=location.pathname.replace(/\\/[^\\/]+\\/[^\\/]+\\$/,\"/\");(function(){var p=history.pushState,r=history.replaceState;history.pushState=function(s,t,u){if(u&&u.indexOf(\"#/arxiv-to-slidev/\")>=0)u=u.replace(/\\/arxiv-to-slidev\\/examples\\/(cn|en)\\/g,\"/\");return p.call(this,s,t,u)};history.replaceState=function(s,t,u){if(u&&u.indexOf(\"#/arxiv-to-slidev/\")>=0)u=u.replace(/\\/arxiv-to-slidev\\/examples\\/(cn|en)\\/g,\"/\");return r.call(this,s,t,u)};var h=location.hash;if(h&&h.indexOf(\"/arxiv-to-slidev/\")>=0)history.replaceState(null,\"\",b+\"#/\"+h.replace(/\\/arxiv-to-slidev\\/examples\\/(cn|en)\\/g,\"\").replace(\"#/\",\"\"))})()</script></head>');
+          fs.writeFileSync('dist/index.html',h);
+          console.log('Fixed hash');
+          "
           # Overwrite 404.html with SPA redirect
           cat > dist/404.html << 'EOF404'
           <!DOCTYPE html><html><head><meta charset="utf-8"><title>Redirecting</title><script>
@@ -48,8 +54,14 @@ jobs:
         run: |
           cd examples/en
           npx slidev build slides.md --base /arxiv-to-slidev/examples/en/
-          # Fix hash routing: strip base path from hash (using slice, no regex escaping issues)
-          sed -i 's|</head>|<script>var b="/arxiv-to-slidev/examples/en/";var h=location.hash;if(h.indexOf(b)>=0)history.replaceState(null,"",b+"#/"+h.replace(b,"").slice(2));window.addEventListener("hashchange",function(){var h2=location.hash;if(h2.indexOf(b)>=0)history.replaceState(null,"",b+"#/"+h2.replace(b,"").slice(2))})</script></head>|' dist/index.html
+          # Fix hash: intercept pushState to strip base path (using Node to avoid sed escaping)
+          node -e "
+          var fs=require('fs');
+          var h=fs.readFileSync('dist/index.html','utf8');
+          h=h.replace('</head>','<script>var b=location.pathname.replace(/\\/[^\\/]+\\/[^\\/]+\\$/,\"/\");(function(){var p=history.pushState,r=history.replaceState;history.pushState=function(s,t,u){if(u&&u.indexOf(\"#/arxiv-to-slidev/\")>=0)u=u.replace(/\\/arxiv-to-slidev\\/examples\\/(cn|en)\\/g,\"/\");return p.call(this,s,t,u)};history.replaceState=function(s,t,u){if(u&&u.indexOf(\"#/arxiv-to-slidev/\")>=0)u=u.replace(/\\/arxiv-to-slidev\\/examples\\/(cn|en)\\/g,\"/\");return r.call(this,s,t,u)};var h=location.hash;if(h&&h.indexOf(\"/arxiv-to-slidev/\")>=0)history.replaceState(null,\"\",b+\"#/\"+h.replace(/\\/arxiv-to-slidev\\/examples\\/(cn|en)\\/g,\"\").replace(\"#/\",\"\"))})()</script></head>');
+          fs.writeFileSync('dist/index.html',h);
+          console.log('Fixed hash');
+          "
           # Overwrite 404.html with SPA redirect
           cat > dist/404.html << 'EOF404'
           <!DOCTYPE html><html><head><meta charset="utf-8"><title>Redirecting</title><script>

@@ -27,44 +27,24 @@ jobs:
           node-version: 24
       - run: npm install -g @slidev/cli @slidev/theme-default
 
-      # Build CN
+      # Build CN (with base / so Vue Router hash is clean)
       - name: Build CN
         run: |
           cd examples/cn
-          npx slidev build slides.md --base /arxiv-to-slidev/cn/
-          cat > /tmp/fix.js << 'FIXEOF'
-          var fs=require('fs'), h=fs.readFileSync('dist/index.html','utf8');
-          var s='<script>(function(){var p=history.pushState,r=history.replaceState;'+
-          'history.pushState=function(s,t,u){if(u&&u.indexOf("#/arxiv-to-slidev/")>=0)'+
-          'u=u.replace(/#\\/arxiv-to-slidev\\/cn\\//g,"#/");return p.call(this,s,t,u)};'+
-          'history.replaceState=function(s,t,u){if(u&&u.indexOf("#/arxiv-to-slidev/")>=0)'+
-          'u=u.replace(/#\\/arxiv-to-slidev\\/cn\\//g,"#/");return r.call(this,s,t,u)};'+
-          'var x=location.hash;if(x&&x.indexOf("/arxiv-to-slidev/")>=0)'+
-          'history.replaceState(null,"",location.pathname+"#/"+x.replace("#/","").replace(/\\/arxiv-to-slidev\\/cn\\//g,""))'+
-          '})()</script>';
-          fs.writeFileSync('dist/index.html',h.replace('</head>',s+'</head>'));
-          FIXEOF
-          node /tmp/fix.js
+          npx slidev build slides.md --base /
+          # Fix asset paths in HTML for subdirectory deployment
+          sed -i "s|href=\"/assets/|href=\"/arxiv-to-slidev/cn/assets/|g" dist/index.html
+          sed -i "s|src=\"/assets/|src=\"/arxiv-to-slidev/cn/assets/|g" dist/index.html
           mkdir -p ../../_site/cn && cp -r dist/* ../../_site/cn/
 
       # Build EN
       - name: Build EN
         run: |
           cd examples/en
-          npx slidev build slides.md --base /arxiv-to-slidev/en/
-          cat > /tmp/fix.js << 'FIXEOF'
-          var fs=require('fs'), h=fs.readFileSync('dist/index.html','utf8');
-          var s='<script>(function(){var p=history.pushState,r=history.replaceState;'+
-          'history.pushState=function(s,t,u){if(u&&u.indexOf("#/arxiv-to-slidev/")>=0)'+
-          'u=u.replace(/#\\/arxiv-to-slidev\\/en\\//g,"#/");return p.call(this,s,t,u)};'+
-          'history.replaceState=function(s,t,u){if(u&&u.indexOf("#/arxiv-to-slidev/")>=0)'+
-          'u=u.replace(/#\\/arxiv-to-slidev\\/en\\//g,"#/");return r.call(this,s,t,u)};'+
-          'var x=location.hash;if(x&&x.indexOf("/arxiv-to-slidev/")>=0)'+
-          'history.replaceState(null,"",location.pathname+"#/"+x.replace("#/","").replace(/\\/arxiv-to-slidev\\/en\\//g,""))'+
-          '})()</script>';
-          fs.writeFileSync('dist/index.html',h.replace('</head>',s+'</head>'));
-          FIXEOF
-          node /tmp/fix.js
+          npx slidev build slides.md --base /
+          # Fix asset paths in HTML for subdirectory deployment
+          sed -i "s|href=\"/assets/|href=\"/arxiv-to-slidev/en/assets/|g" dist/index.html
+          sed -i "s|src=\"/assets/|src=\"/arxiv-to-slidev/en/assets/|g" dist/index.html
           mkdir -p ../../_site/en && cp -r dist/* ../../_site/en/
 
       # Deploy

@@ -32,8 +32,19 @@ jobs:
         run: |
           cd examples/cn
           npx slidev build slides.md --base /arxiv-to-slidev/examples/cn/
-          # Inject SPA redirect into 404.html
-          sed -i 's|</head>|<script>const p=location.pathname.replace("/arxiv-to-slidev/examples/cn/","");if(p&&!p.startsWith("assets/"))location.replace("/arxiv-to-slidev/examples/cn/#/"+p)</script></head>|' dist/404.html
+          # Overwrite 404.html with proper SPA redirect (hash mode)
+          cat > dist/404.html << 'EOF404'
+          <!DOCTYPE html>
+          <html>
+          <head><meta charset="utf-8"><title>Redirecting...</title>
+          <script>
+          var p = location.pathname.replace('/arxiv-to-slidev/examples/cn/', '');
+          if (p && !p.startsWith('assets/')) location.replace('/arxiv-to-slidev/examples/cn/#/' + p);
+          else location.replace('/arxiv-to-slidev/examples/cn/');
+          </script></head>
+          <body><a href="./">Redirecting...</a></body>
+          </html>
+          EOF404
           mkdir -p ../../_site/examples/cn
           cp -r dist/* ../../_site/examples/cn/
 
@@ -42,8 +53,19 @@ jobs:
         run: |
           cd examples/en
           npx slidev build slides.md --base /arxiv-to-slidev/examples/en/
-          # Inject SPA redirect into 404.html
-          sed -i 's|</head>|<script>const p=location.pathname.replace("/arxiv-to-slidev/examples/en/","");if(p&&!p.startsWith("assets/"))location.replace("/arxiv-to-slidev/examples/en/#/"+p)</script></head>|' dist/404.html
+          # Overwrite 404.html with proper SPA redirect (hash mode)
+          cat > dist/404.html << 'EOF404'
+          <!DOCTYPE html>
+          <html>
+          <head><meta charset="utf-8"><title>Redirecting...</title>
+          <script>
+          var p = location.pathname.replace('/arxiv-to-slidev/examples/en/', '');
+          if (p && !p.startsWith('assets/')) location.replace('/arxiv-to-slidev/examples/en/#/' + p);
+          else location.replace('/arxiv-to-slidev/examples/en/');
+          </script></head>
+          <body><a href="./">Redirecting...</a></body>
+          </html>
+          EOF404
           mkdir -p ../../_site/examples/en
           cp -r dist/* ../../_site/examples/en/
 

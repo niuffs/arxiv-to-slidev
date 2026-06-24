@@ -32,18 +32,13 @@ jobs:
         run: |
           cd examples/cn
           npx slidev build slides.md --base /arxiv-to-slidev/examples/cn/
-          # Overwrite 404.html with proper SPA redirect (hash mode)
+          # Fix hash routing: strip base path from hash (& is escaped for sed)
+          sed -i 's|</head>|<script>var b="/arxiv-to-slidev/examples/cn/";var h=location.hash;if(h\&\&h.includes(b))history.replaceState(null,"",b+"#/"+h.replace(b,"").replace(/^#\/?/,""));window.addEventListener("hashchange",function(){var h2=location.hash;if(h2\&\&h2.includes(b))history.replaceState(null,"",b+"#/"+h2.replace(b,"").replace(/^#\/?/,""))})</script></head>|' dist/index.html
+          # Overwrite 404.html with SPA redirect
           cat > dist/404.html << 'EOF404'
-          <!DOCTYPE html>
-          <html>
-          <head><meta charset="utf-8"><title>Redirecting...</title>
-          <script>
-          var p = location.pathname.replace('/arxiv-to-slidev/examples/cn/', '');
-          if (p && !p.startsWith('assets/')) location.replace('/arxiv-to-slidev/examples/cn/#/' + p);
-          else location.replace('/arxiv-to-slidev/examples/cn/');
-          </script></head>
-          <body><a href="./">Redirecting...</a></body>
-          </html>
+          <!DOCTYPE html><html><head><meta charset="utf-8"><title>Redirecting</title><script>
+          var p=location.pathname.replace('/arxiv-to-slidev/examples/cn/','');if(p\&\&!p.startsWith('assets/'))location.replace('/arxiv-to-slidev/examples/cn/#/'+p);else location.replace('/arxiv-to-slidev/examples/cn/');
+          </script></head><body></body></html>
           EOF404
           mkdir -p ../../_site/examples/cn
           cp -r dist/* ../../_site/examples/cn/
@@ -53,18 +48,13 @@ jobs:
         run: |
           cd examples/en
           npx slidev build slides.md --base /arxiv-to-slidev/examples/en/
-          # Overwrite 404.html with proper SPA redirect (hash mode)
+          # Fix hash routing: strip base path from hash (& is escaped for sed)
+          sed -i 's|</head>|<script>var b="/arxiv-to-slidev/examples/en/";var h=location.hash;if(h\&\&h.includes(b))history.replaceState(null,"",b+"#/"+h.replace(b,"").replace(/^#\/?/,""));window.addEventListener("hashchange",function(){var h2=location.hash;if(h2\&\&h2.includes(b))history.replaceState(null,"",b+"#/"+h2.replace(b,"").replace(/^#\/?/,""))})</script></head>|' dist/index.html
+          # Overwrite 404.html with SPA redirect
           cat > dist/404.html << 'EOF404'
-          <!DOCTYPE html>
-          <html>
-          <head><meta charset="utf-8"><title>Redirecting...</title>
-          <script>
-          var p = location.pathname.replace('/arxiv-to-slidev/examples/en/', '');
-          if (p && !p.startsWith('assets/')) location.replace('/arxiv-to-slidev/examples/en/#/' + p);
-          else location.replace('/arxiv-to-slidev/examples/en/');
-          </script></head>
-          <body><a href="./">Redirecting...</a></body>
-          </html>
+          <!DOCTYPE html><html><head><meta charset="utf-8"><title>Redirecting</title><script>
+          var p=location.pathname.replace('/arxiv-to-slidev/examples/en/','');if(p&&!p.startsWith('assets/'))location.replace('/arxiv-to-slidev/examples/en/#/'+p);else location.replace('/arxiv-to-slidev/examples/en/');
+          </script></head><body></body></html>
           EOF404
           mkdir -p ../../_site/examples/en
           cp -r dist/* ../../_site/examples/en/

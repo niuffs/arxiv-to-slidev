@@ -27,27 +27,34 @@ jobs:
           node-version: 24
       - run: npm install -g @slidev/cli @slidev/theme-default
 
-      # Build CN (with base / so Vue Router hash is clean)
       - name: Build CN
         run: |
           cd examples/cn
-          npx slidev build slides.md --base /
-          # Fix asset paths in HTML for subdirectory deployment
-          sed -i "s|href=\"/assets/|href=\"/arxiv-to-slidev/cn/assets/|g" dist/index.html
-          sed -i "s|src=\"/assets/|src=\"/arxiv-to-slidev/cn/assets/|g" dist/index.html
+          npx slidev build slides.md --base /arxiv-to-slidev/cn/
+          # Inject SPA path restore script
+          node -e "var f=require('fs'),h=f.readFileSync('dist/index.html','utf8');h=h.replace('</head>','<script>var r=sessionStorage.getItem(\"spa\");if(r){sessionStorage.removeItem(\"spa\");history.replaceState(null,\"\",r)}</script></head>');f.writeFileSync('dist/index.html',h)"
           mkdir -p ../../_site/cn && cp -r dist/* ../../_site/cn/
 
-      # Build EN
       - name: Build EN
         run: |
           cd examples/en
-          npx slidev build slides.md --base /
-          # Fix asset paths in HTML for subdirectory deployment
-          sed -i "s|href=\"/assets/|href=\"/arxiv-to-slidev/en/assets/|g" dist/index.html
-          sed -i "s|src=\"/assets/|src=\"/arxiv-to-slidev/en/assets/|g" dist/index.html
+          npx slidev build slides.md --base /arxiv-to-slidev/en/
+          node -e "var f=require('fs'),h=f.readFileSync('dist/index.html','utf8');h=h.replace('</head>','<script>var r=sessionStorage.getItem(\"spa\");if(r){sessionStorage.removeItem(\"spa\");history.replaceState(null,\"\",r)}</script></head>');f.writeFileSync('dist/index.html',h)"
           mkdir -p ../../_site/en && cp -r dist/* ../../_site/en/
 
-      # Deploy
+      - name: Root 404 + redirect
+        run: |
+          cat > _site/404.html << 'EOF'
+          <!DOCTYPE html><html><head><meta charset="utf-8"><title>Redirecting</title><script>
+          var p=location.pathname;if(p.includes('/cn/')){sessionStorage.setItem('spa',p);location.replace('./cn/')}
+          else if(p.includes('/en/')){sessionStorage.setItem('spa',p);location.replace('./en/')}
+          else{location.replace('./cn/')}
+          </script></head><body></body></html>
+          EOF
+          cat > _site/index.html << 'EOF'
+          <!DOCTYPE html><html><head><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=./cn/"><title>Redirecting</title></head><body><a href="./cn/">arxiv-to-slidev</a></body></html>
+          EOF
+
       - uses: actions/configure-pages@v4
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

@@ -12,7 +12,14 @@ routerMode: hash
 head:
   - style: |
       .slidev-page, .slidev-slide-content { overflow-y: scroll !important; }
-      .slidev-layout h1 + p { opacity: 1 !important; }
+      .slidev-layout h1 + p, .slidev-layout h1 + ul, .slidev-layout h1 + ol,
+      .slidev-layout h1 + div, .slidev-layout h1 + h2, .slidev-layout h1 + h3,
+      .slidev-layout h2 + p, .slidev-layout h2 + ul,
+      .slidev-layout h3 + p { opacity: 1 !important; }
+      .slidev-layout h1 { font-size: 2.25rem !important; margin-bottom: 1.5rem !important; }
+      .slidev-layout h2 { font-size: 1.5rem !important; margin-top: 1.5rem !important; margin-bottom: 0.75rem !important; line-height: 1.4 !important; }
+      .slidev-layout h3 { font-size: 1.125rem !important; margin-top: 1rem !important; margin-bottom: 0.5rem !important; font-weight: 600 !important; }
+      .slidev-layout p, .slidev-layout li { font-size: 1.125rem !important; line-height: 1.6 !important; }
 ---
 
 # Rex: A Family of Reversible Exponential (Stochastic) Runge-Kutta Solvers

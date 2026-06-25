@@ -112,9 +112,7 @@ By leveraging the [Slidev project](https://github.com/slidevjs/slidev), this ski
 Change the overall visual style via the `theme:` field in the frontmatter:
 
 ```yaml
----
-theme: default  # currently used
----
+theme: apple-basic  # currently used
 ```
 
 Available themes:

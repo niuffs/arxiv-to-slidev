@@ -31,83 +31,49 @@ jobs:
         run: |
           cd examples/cn
           npx slidev build slides.md --base /arxiv-to-slidev/cn/
-          # Inject hash fix via temp script (avoids YAML/bash/Node triple escaping issues)
-          cat > /tmp/fix_hash.js << 'FIXEOF'
-          var fs = require('fs');
-          var html = fs.readFileSync('dist/index.html', 'utf8');
-          var script = '<script>' +
-            'window.addEventListener("vite:preloadError",function(e){e.preventDefault()});' +
-            '(function(){' +
-            'var i=setInterval(function(){' +
-            'var h=location.hash;' +
-            'var m=h.match(/^#\/(?:arxiv-to-slidev\/(?:cn|en)\/(.+)$/);' +
-            'if(m&&m[1]!=="1")history.replaceState(null,"","#"+m[1])' +
-            '},100);' +
-            'window.addEventListener("popstate",function(){' +
-            'var h=location.hash;' +
-            'var m=h.match(/^#\/(?:arxiv-to-slidev\/(?:cn|en)\/(.+)$/);' +
-            'if(m)history.replaceState(null,"","#"+m[1])' +
-            '})})();</script>';
-          html = html.replace('</head>', script + '</head>');
-          fs.writeFileSync('dist/index.html', html);
-          console.log('Hash fix injected');
-          FIXEOF
-          node /tmp/fix_hash.js
+          # Inject preloadError fix + hash fix (string ops, no regex escaping issues)
+          sed -i 's|</head>|<script>window.addEventListener("vite:preloadError",function(e){e.preventDefault()});(function(){var _push=history.pushState,_rep=history.replaceState;function fix(u){var p="#/arxiv-to-slidev/";if(typeof u==="string"&&u.indexOf(p)===0)return "#/"+u.substring(p.length);return u}history.pushState=function(s,t,u){return _push.call(this,s,t,fix(u))};history.replaceState=function(s,t,u){return _rep.call(this,s,t,fix(u))};var h=location.hash;if(h.indexOf("/arxiv-to-slidev/")>=0)history.replaceState(null,"",fix(h))})();</script></head>|' dist/index.html
           mkdir -p ../../_site/cn && cp -r dist/* ../../_site/cn/
 
       - name: Build EN
         run: |
           cd examples/en
           npx slidev build slides.md --base /arxiv-to-slidev/en/
-          cat > /tmp/fix_hash.js << 'FIXEOF'
-          var fs = require('fs');
-          var html = fs.readFileSync('dist/index.html', 'utf8');
-          var script = '<script>' +
-            'window.addEventListener("vite:preloadError",function(e){e.preventDefault()});' +
-            '(function(){' +
-            'var i=setInterval(function(){' +
-            'var h=location.hash;' +
-            'var m=h.match(/^#\/(?:arxiv-to-slidev\/(?:cn|en)\/(.+)$/);' +
-            'if(m&&m[1]!=="1")history.replaceState(null,"","#"+m[1])' +
-            '},100);' +
-            'window.addEventListener("popstate",function(){' +
-            'var h=location.hash;' +
-            'var m=h.match(/^#\/(?:arxiv-to-slidev\/(?:cn|en)\/(.+)$/);' +
-            'if(m)history.replaceState(null,"","#"+m[1])' +
-            '})})();</script>';
-          html = html.replace('</head>', script + '</head>');
-          fs.writeFileSync('dist/index.html', html);
-          console.log('Hash fix injected');
-          FIXEOF
-          node /tmp/fix_hash.js
+          sed -i 's|</head>|<script>window.addEventListener("vite:preloadError",function(e){e.preventDefault()});(function(){var _push=history.pushState,_rep=history.replaceState;function fix(u){var p="#/arxiv-to-slidev/";if(typeof u==="string"&&u.indexOf(p)===0)return "#/"+u.substring(p.length);return u}history.pushState=function(s,t,u){return _push.call(this,s,t,fix(u))};history.replaceState=function(s,t,u){return _rep.call(this,s,t,fix(u))};var h=location.hash;if(h.indexOf("/arxiv-to-slidev/")>=0)history.replaceState(null,"",fix(h))})();</script></head>|' dist/index.html
           mkdir -p ../../_site/en && cp -r dist/* ../../_site/en/
 
-      - name: Root redirect + 404.html
+      - name: Root redirect + 404.html SPA fallback + static slides
         run: |
-          # Root → redirect to CN
           cat > _site/index.html << 'EOF'
           <!DOCTYPE html><html><head><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=./cn/"><title>Redirecting</title></head><body><a href="./cn/">arxiv-to-slidev</a></body></html>
           EOF
-          # 404.html: SPA fallback — converts unknown paths to hash routes
           cat > _site/404.html << 'SPAEOF'
           <!DOCTYPE html><html><head><meta charset="utf-8"><title>Redirecting</title><script>
           (function(){
-            var path = location.pathname;
-            var match;
-            if (match = path.match(/^\/arxiv-to-slidev\/(cn|en)\/(.+)$/)) {
-              var lang = match[1];
-              var slide = match[2];
-              if (slide && !slide.startsWith('assets/') && !slide.startsWith('figures/')) {
-                location.replace('/arxiv-to-slidev/' + lang + '/#' + slide);
+            var p = location.pathname;
+            var m;
+            if (m = p.match(/^\/arxiv-to-slidev\/(cn|en)\/(.+)$/)) {
+              var slide = m[2];
+              if (slide && !slide.match(/^(assets|figures)/)) {
+                location.replace('/arxiv-to-slidev/' + m[1] + '/#/' + slide);
                 return;
               }
             }
-            if (path.startsWith('/arxiv-to-slidev/cn/')) location.replace('/arxiv-to-slidev/cn/');
-            else if (path.startsWith('/arxiv-to-slidev/en/')) location.replace('/arxiv-to-slidev/en/');
+            if (p.indexOf('/arxiv-to-slidev/cn/') >= 0) location.replace('/arxiv-to-slidev/cn/');
+            else if (p.indexOf('/arxiv-to-slidev/en/') >= 0) location.replace('/arxiv-to-slidev/en/');
             else location.replace('/arxiv-to-slidev/');
           })();
           </script></head><body></body></html>
           SPAEOF
+          # Generate static HTML files for each slide (60 slides)
+          for lang in cn en; do
+            for i in $(seq 1 60); do
+              mkdir -p "_site/$lang/$i"
+              cat > "_site/$lang/$i/index.html" << SLIDEEOF
+          <!DOCTYPE html><html><head><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=../#/$i"><title>Slide $i</title></head><body><a href="../#/$i">Slide $i</a></body></html>
+          SLIDEEOF
+            done
+          done
 
       - uses: actions/configure-pages@v4
       - name: Upload artifact

@@ -1,7 +1,7 @@
 
 # arxiv-to-slidev
 
-> 从 arXiv 论文 LaTeX 源码自动生成 Slidev 讨论班演示文稿的 Claude Code Skill
+> 从 arXiv 论文 LaTeX 源码自动生成 Slidev 讨论班演示文稿的 Skill
 
 ---
 
@@ -9,7 +9,7 @@
 
 ### 简介
 
-**arxiv-to-slidev** 是一个 Claude Code Skill，用于从 arXiv 论文的 LaTeX 源码自动生成 [Slidev](https://github.com/slidevjs/slidev) 格式的讨论班演示文稿。
+**arxiv-to-slidev** 是一个 Skill，用于从 arXiv 论文的 LaTeX 源码自动生成 [Slidev](https://github.com/slidevjs/slidev) 格式的讨论班演示文稿。
 
 ### 解决的问题
 
@@ -37,7 +37,6 @@ Markdown 格式的幻灯片（如 Marp）格式单一，排版能力有限；而
 | 上一页 | `←` 方向键 |
 | 概览模式 | `O` |
 | 黑暗模式 | `D` |
-| 绘图模式 | `B` (按住) |
 | 全屏 | `F` |
 
 ### 示例
@@ -51,7 +50,7 @@ Markdown 格式的幻灯片（如 Marp）格式单一，排版能力有限；而
 
 ### 安装
 
-将 `Skills/arxiv-to-slidev-cn/` 或 `Skills/arxiv-to-slidev-en/` 放入 Claude Code 项目的 `.claude/skills/` 目录。
+将 `Skills/arxiv-to-slidev-cn/` 或 `Skills/arxiv-to-slidev-en/` 放入项目的 `.claude/skills/` 目录。
 
 ---
 
@@ -59,7 +58,7 @@ Markdown 格式的幻灯片（如 Marp）格式单一，排版能力有限；而
 
 ### Introduction
 
-**arxiv-to-slidev** is a Claude Code Skill that automatically generates [Slidev](https://github.com/slidevjs/slidev) seminar presentations from arXiv paper LaTeX source code.
+**arxiv-to-slidev** is a Skill that automatically generates [Slidev](https://github.com/slidevjs/slidev) seminar presentations from arXiv paper LaTeX source code.
 
 ### Problem Statement
 
@@ -87,7 +86,6 @@ By leveraging the [Slidev project](https://github.com/slidevjs/slidev), this ski
 | Previous slide | `←` Arrow key |
 | Overview mode | `O` |
 | Dark mode | `D` |
-| Drawing mode | `B` (hold) |
 | Fullscreen | `F` |
 
 ### Examples
@@ -101,7 +99,7 @@ To demonstrate the skill's effectiveness, we use the **ICML 2026** paper:
 
 ### Installation
 
-Place `Skills/arxiv-to-slidev-cn/` or `Skills/arxiv-to-slidev-en/` into your Claude Code project's `.claude/skills/` directory.
+Place `Skills/arxiv-to-slidev-cn/` or `Skills/arxiv-to-slidev-en/` into your project's `.claude/skills/` directory.
 
 ---
 

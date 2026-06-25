@@ -44,21 +44,19 @@ Markdown 格式的幻灯片（如 Marp）格式单一，排版能力有限；而
 Slidev 支持通过 frontmatter 的 `theme:` 字段切换整体视觉风格：
 
 ```yaml
----
-theme: default  # 当前使用的主题
----
+theme: apple-basic  # 当前使用的主题
 ```
 
 可选主题：
 
 | 主题 | 安装命令 | 风格 |
 |------|---------|------|
-| `default` | 预装（`@slidev/theme-default`） | 简洁现代，无衬线字体 |
+| `apple-basic` | `npm install -g @slidev/theme-apple-basic` | Apple 风格，简洁清爽 |
 | `seriph` | `npm install -g @slidev/theme-seriph` | 衬线字体，学术风格 |
 
-使用示例：在 `slides.md` 的 frontmatter 中将 `theme: default` 改为 `theme: seriph` 即可应用学术衬线主题。
+当前示例使用 `apple-basic` 主题。官方主题画廊：https://sli.dev/resources/theme-gallery
 
-也可搜索社区主题：`npm search slidev-theme`
+使用示例：在 `slides.md` 的 frontmatter 中将 `theme: apple-basic` 改为 `theme: seriph` 即可切换。搜索社区主题：`npm search slidev-theme`
 
 ### 示例
 
@@ -123,12 +121,12 @@ Available themes:
 
 | Theme | Install | Style |
 |-------|---------|-------|
-| `default` | pre-installed (`@slidev/theme-default`) | Clean modern, sans-serif |
+| `apple-basic` | `npm install -g @slidev/theme-apple-basic` | Apple-style, clean & minimal |
 | `seriph` | `npm install -g @slidev/theme-seriph` | Serif font, academic |
 
-Usage: change `theme: default` to `theme: seriph` in `slides.md` frontmatter.
+Current examples use `apple-basic`. Theme gallery: https://sli.dev/resources/theme-gallery
 
-Search community themes: `npm search slidev-theme`
+Usage: change `theme: apple-basic` to `theme: seriph` in `slides.md` frontmatter. Search community themes: `npm search slidev-theme`
 
 ### Examples
 

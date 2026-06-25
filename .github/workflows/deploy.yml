@@ -42,11 +42,32 @@ jobs:
           sed -i 's|</head>|<script>window.addEventListener("vite:preloadError",function(e){e.preventDefault()})</script></head>|' dist/index.html
           mkdir -p ../../_site/en && cp -r dist/* ../../_site/en/
 
-      - name: Root redirect
+      - name: Root redirect + 404.html
         run: |
+          # Root → redirect to CN
           cat > _site/index.html << 'EOF'
           <!DOCTYPE html><html><head><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=./cn/"><title>Redirecting</title></head><body><a href="./cn/">arxiv-to-slidev</a></body></html>
           EOF
+          # 404.html: SPA fallback — converts unknown paths to hash routes
+          cat > _site/404.html << 'SPAEOF'
+          <!DOCTYPE html><html><head><meta charset="utf-8"><title>Redirecting</title><script>
+          (function(){
+            var path = location.pathname;
+            var match;
+            if (match = path.match(/^\/arxiv-to-slidev\/(cn|en)\/(.+)$/)) {
+              var lang = match[1];
+              var slide = match[2];
+              if (slide && !slide.startsWith('assets/') && !slide.startsWith('figures/')) {
+                location.replace('/arxiv-to-slidev/' + lang + '/#' + slide);
+                return;
+              }
+            }
+            if (path.startsWith('/arxiv-to-slidev/cn/')) location.replace('/arxiv-to-slidev/cn/');
+            else if (path.startsWith('/arxiv-to-slidev/en/')) location.replace('/arxiv-to-slidev/en/');
+            else location.replace('/arxiv-to-slidev/');
+          })();
+          </script></head><body></body></html>
+          SPAEOF
 
       - uses: actions/configure-pages@v4
       - name: Upload artifact

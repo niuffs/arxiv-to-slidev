@@ -51,6 +51,7 @@ theme: apple-basic  # 当前使用的主题
 
 | 主题 | 安装命令 | 风格 |
 |------|---------|------|
+| `default` | 预装（`@slidev/theme-default`） | 简洁现代，无衬线 |
 | `apple-basic` | `npm install -g @slidev/theme-apple-basic` | Apple 风格，简洁清爽 |
 | `seriph` | `npm install -g @slidev/theme-seriph` | 衬线字体，学术风格 |
 
@@ -119,6 +120,7 @@ Available themes:
 
 | Theme | Install | Style |
 |-------|---------|-------|
+| `default` | pre-installed (`@slidev/theme-default`) | Clean modern, sans-serif |
 | `apple-basic` | `npm install -g @slidev/theme-apple-basic` | Apple-style, clean & minimal |
 | `seriph` | `npm install -g @slidev/theme-seriph` | Serif font, academic |
 

@@ -32,14 +32,14 @@ jobs:
           cd examples/cn
           npx slidev build slides.md --base /arxiv-to-slidev/cn/
           # Inject preloadError fix + hash fix (string ops, no regex escaping issues)
-          sed -i 's|</head>|<script>window.addEventListener("vite:preloadError",function(e){e.preventDefault()});(function(){var _push=history.pushState,_rep=history.replaceState;function fix(u){var p="#/arxiv-to-slidev/";if(typeof u==="string"&&u.indexOf(p)===0){var r=u.substring(p.length);var i=r.indexOf("/");return "#/"+r.substring(i+1)}return u}history.pushState=function(s,t,u){return _push.call(this,s,t,fix(u))};history.replaceState=function(s,t,u){return _rep.call(this,s,t,fix(u))};var h=location.hash;if(h.indexOf("/arxiv-to-slidev/")>=0)history.replaceState(null,"",fix(h))})();</script></head>|' dist/index.html
+          sed -i 's|</head>|<script>window.addEventListener("vite:preloadError",function(e){e.preventDefault()});setInterval(function(){var h=location.hash;if(h.indexOf("#/arxiv-to-slidev/")===0){var p=h.split("/");var s=p[p.length-1];if(s)history.replaceState(null,"","#/"+s)}},100);</script></head>|' dist/index.html
           mkdir -p ../../_site/cn && cp -r dist/* ../../_site/cn/
 
       - name: Build EN
         run: |
           cd examples/en
           npx slidev build slides.md --base /arxiv-to-slidev/en/
-          sed -i 's|</head>|<script>window.addEventListener("vite:preloadError",function(e){e.preventDefault()});(function(){var _push=history.pushState,_rep=history.replaceState;function fix(u){var p="#/arxiv-to-slidev/";if(typeof u==="string"&&u.indexOf(p)===0){var r=u.substring(p.length);var i=r.indexOf("/");return "#/"+r.substring(i+1)}return u}history.pushState=function(s,t,u){return _push.call(this,s,t,fix(u))};history.replaceState=function(s,t,u){return _rep.call(this,s,t,fix(u))};var h=location.hash;if(h.indexOf("/arxiv-to-slidev/")>=0)history.replaceState(null,"",fix(h))})();</script></head>|' dist/index.html
+          sed -i 's|</head>|<script>window.addEventListener("vite:preloadError",function(e){e.preventDefault()});setInterval(function(){var h=location.hash;if(h.indexOf("#/arxiv-to-slidev/")===0){var p=h.split("/");var s=p[p.length-1];if(s)history.replaceState(null,"","#/"+s)}},100);</script></head>|' dist/index.html
           mkdir -p ../../_site/en && cp -r dist/* ../../_site/en/
 
       - name: Root redirect + 404.html SPA fallback + static slides

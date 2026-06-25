@@ -32,14 +32,14 @@ jobs:
           cd examples/cn
           npx slidev build slides.md --base /arxiv-to-slidev/cn/
           # Inject preloadError fix + hash fix (string ops, no regex escaping issues)
-          sed -i 's|</head>|<script>window.addEventListener("vite:preloadError",function(e){e.preventDefault()});(function(){var f=function(){var h=location.hash;if(h.indexOf("/arxiv-to-slidev/")<0)return;var p=h.split("/");var s=parseInt(p[p.length-1],10);if(s>0)history.replaceState(null,"","#/"+s)};var _push=history.pushState,_rep=history.replaceState;history.pushState=function(){var r=_push.apply(this,arguments);f();return r};history.replaceState=function(){var r=_rep.apply(this,arguments);f();return r};window.addEventListener("hashchange",f);window.addEventListener("popstate",f);setInterval(f,200);f()})();</script></head>|' dist/index.html
+          sed -i 's|</head>|<script>window.addEventListener("vite:preloadError",function(e){e.preventDefault()});(function(){var f=function(){var h=location.hash;if(h.indexOf("/arxiv-to-slidev/")<0)return;var p=h.split("/");var s=parseInt(p[p.length-1],10);if(s>0){history.replaceState(null,"","#/"+s);window.dispatchEvent(new PopStateEvent("popstate"))}};var _push=history.pushState,_rep=history.replaceState;history.pushState=function(){var r=_push.apply(this,arguments);f();return r};history.replaceState=function(){var r=_rep.apply(this,arguments);f();return r};window.addEventListener("hashchange",f);setTimeout(f,100);f()})();</script></head>|' dist/index.html
           mkdir -p ../../_site/cn && cp -r dist/* ../../_site/cn/
 
       - name: Build EN
         run: |
           cd examples/en
           npx slidev build slides.md --base /arxiv-to-slidev/en/
-          sed -i 's|</head>|<script>window.addEventListener("vite:preloadError",function(e){e.preventDefault()});(function(){var f=function(){var h=location.hash;if(h.indexOf("/arxiv-to-slidev/")<0)return;var p=h.split("/");var s=parseInt(p[p.length-1],10);if(s>0)history.replaceState(null,"","#/"+s)};var _push=history.pushState,_rep=history.replaceState;history.pushState=function(){var r=_push.apply(this,arguments);f();return r};history.replaceState=function(){var r=_rep.apply(this,arguments);f();return r};window.addEventListener("hashchange",f);window.addEventListener("popstate",f);setInterval(f,200);f()})();</script></head>|' dist/index.html
+          sed -i 's|</head>|<script>window.addEventListener("vite:preloadError",function(e){e.preventDefault()});(function(){var f=function(){var h=location.hash;if(h.indexOf("/arxiv-to-slidev/")<0)return;var p=h.split("/");var s=parseInt(p[p.length-1],10);if(s>0){history.replaceState(null,"","#/"+s);window.dispatchEvent(new PopStateEvent("popstate"))}};var _push=history.pushState,_rep=history.replaceState;history.pushState=function(){var r=_push.apply(this,arguments);f();return r};history.replaceState=function(){var r=_rep.apply(this,arguments);f();return r};window.addEventListener("hashchange",f);setTimeout(f,100);f()})();</script></head>|' dist/index.html
           mkdir -p ../../_site/en && cp -r dist/* ../../_site/en/
 
       - name: Root redirect + 404.html SPA fallback + static slides

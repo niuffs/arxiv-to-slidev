@@ -27,138 +27,65 @@ class: text-center
 transition: slide-left
 monaco: false
 lineNumbers: false
-katex: true
+---
+
+<style>
+.slidev-page { overflow-y: auto !important; }
+</style>
+```
+
+`overflow-y: auto !important` 确保内容超出页面高度时自动出现滚动条，避免内容被截断。
+
+**注意：** Slidev 默认主题对 `h1` 后的段落施加 `opacity: 0.5`（灰色半透明效果），必须在 `head:` 中添加 CSS 覆盖：
+```yaml
 head:
   - style: |
       .slidev-page, .slidev-slide-content { overflow-y: scroll !important; }
----
+      .slidev-layout h1 + p { opacity: 1 !important; }
 ```
 
-**说明：**
-- `katex: true` —— 显式启用 KaTeX 数学渲染（Slidev v52+ 默认不启用，必须设置此项）
-- `head:` —— 通过 frontmatter 的 `head` 选项注入全局 CSS
-
-#### 滚动条设置（重要）
-
-Slidev 默认在 `.slidev-slide-container` 和 `.slidev-slide-content` 上设置了 `overflow: hidden`，导致内容超出时被截断且无法滚动。
-
-需要在项目根目录下创建 `styles/index.css` 文件，Slidev 会自动加载该文件中的全局样式：
-
-```css
-/* styles/index.css：覆盖 Slidev 默认隐藏溢出行为 */
-.slidev-slide-container { overflow: visible !important; }
-.slidev-slide-content { overflow: visible !important; }
-.slidev-page { overflow-y: scroll !important; }
-```
-
-**三层容器的含义：**
-- `.slidev-slide-container` —— 最内层包裹容器，默认 `overflow: hidden` → 改为 `visible`
-- `.slidev-slide-content` —— 幻灯片内容容器（绝对定位、居中），默认 `overflow: hidden` → 改为 `visible`
-- `.slidev-page` —— 最外层页面容器，添加 `overflow-y: scroll` 固定显示垂直滚动条
-
-**为什么不能只用 `<style>` 块？** Slidev 会将 `slides.md` 文件体中的 `<style>` 块作为 Vue 作用域样式编译（添加 `data-v-*` 属性选择器），由于作用域 ID 与 Slidev 组件的 DOM 元素不匹配，样式无法生效。`styles/index.css` 是全局样式文件，不受 Vue 作用域限制。`head:` 作为补充手段。
-- 这些目录均为构建产物/辅助文件，**创建 slides 项目后可以一并删除**，仅保留 `slides.md` + `figures/` 即可
-- 见 Step 1 中的清理说明
+### 1.1 字体和层级统一
+- 同一套 PPT 中，标题字号、正文字号、公式大小需保持一致
+- 数学公式和段落之间应有适当间距空格，避免文本紧贴 `$` 符号：
+  - ❌ `adapt$\mathbf{\Phi}$to the` — 文本紧贴 `$`，KaTeX 可能解析错误
+  - ✅ `adapt $\mathbf{\Phi}$ to the` — `$` 前后各留空格
+- 使用 `\boldsymbol{}` 而非 `\mathbf{}` 对希腊字母加粗以保证兼容性
 
 ### 2. 分隔与布局
 
 - 每个 `---` 分隔一页幻灯片
 - 封面页使用 `layout: center` 和 `class: text-center`
 - 双栏布局使用 HTML `<div class="grid grid-cols-2 gap-4">` + 每列各一个 `<div>`（此为幻灯片列布局需要，例外地使用 div）
+- 多图横排布局：使用 `<div class="grid grid-cols-N gap-2">`（N 为列数），每张图放在独立的 `<div>` 中，图片仍用原生 Markdown 语法：
+  ```html
+  <div class="grid grid-cols-5 gap-2">
+  <div>
+
+  ![](./figures/img1.png)
+
+  </div>
+  <div>
+
+  ![](./figures/img2.png)
+
+  </div>
+  </div>
+  ```
 - **禁止使用 `<br>` 标签**——换行通过空行或在 Markdown 行末加两个空格实现
 
 ### 3. 数学公式（原生 Markdown）
 
-使用 KaTeX 语法（Slidev 内建支持，需在 frontmatter 中设置 `katex: true`），**必须使用原生 Markdown 语法**：
+使用 KaTeX 语法（Slidev 内建支持），**必须使用原生 Markdown 语法**：
 
 - 行内公式：`$...$`
-- 行间公式：`$$...$$`（**只能用于正文段落中，禁止在表格和 HTML 标签内使用**）
+- 行间公式：`$$...$$`
 - 多行公式：`\begin{aligned}...\end{aligned}`
 
 **禁止使用** `\[...\]`、`\(...\)` 或任何 HTML 包裹公式。
 
-#### ⚠️ 关键规则：行内公式的 `$` 与内容之间不能有空格
+**注意**：确保 `$...$` 前后无中文标点紧邻。如果有中文标点跟在 `$` 后，在标点前加空格，如 `$公式$ ；`。
 
-Slidev v52+ 要求行内公式的 `$` 与公式内容**紧邻，不能有空格**。这是最常见的问题：
-
-```markdown
-<!-- ❌ 错误：$ 与内容之间有空格，不会渲染，显示为文字 -->
-$ \Xi(t) $   →  显示为 "$ \Xi(t) $"
-$ \mathbf{x} $   →  显示为 "$ \mathbf{x} $"
-
-<!-- ✅ 正确：$ 紧邻内容，正常渲染为公式 -->
-$\Xi(t)$
-$\mathbf{x}$
-```
-
-**修复方法**：生成 `slides.md` 后，用以下正则全局替换所有行内公式首尾的空格：
-
-```
-查找：\$ (.+?) \$
-替换：$\1$
-```
-
-> **注意**：此规则仅针对 `$` 与公式内容之间紧邻的空格。公式**内部**的空格不受影响（如 `$\mathbf{x}_{T\vert t_n}$` 内部可以有空格）。
-
-#### 其他注意事项
-
-- **中文标点**：确保 `$...$` 前后无中文标点紧邻。如果有中文标点跟在 `$` 后，在标点前加空格，如 `$公式$ ；`。
-
-#### ⚠️ 关键：表格中的公式处理
-
-Markdown 表格和 HTML 标签中**不能使用 `$$...$$` 行间公式**，否则公式会被渲染为原文 `$$` 字符串。以下为具体规则：
-
-**规则 1：表格中的公式一律使用行内格式 `$...$`**
-
-```markdown
-<!-- ❌ 错误：在表格中使用 $$...$$ -->
-| 方法 | 公式 |
-|------|------|
-| DDIM | $$x_{t-1} = ...$$ |
-
-<!-- ✅ 正确：表格中使用 $...$（如需行间样式，用 \displaystyle） -->
-| 方法 | 公式 |
-|------|------|
-| DDIM | $\displaystyle x_{t-1} = \frac{\alpha_{t-1}}{\alpha_t}x_t + \sigma_{t-1}\epsilon_\theta$ |
-```
-
-**规则 2：表格公式中的 `|` 管道符用 `\vert` 替代**
-
-```markdown
-<!-- ❌ 错误：公式中的 | 与表格列分隔符冲突 -->
-| $\mathbf{x}_{T|t_n}$ | 条件分布 |
-
-<!-- ✅ 正确：用 \vert 替代 | -->
-| $\mathbf{x}_{T\vert t_n}$ | 条件分布 |
-```
-
-**规则 3：表格公式中的换行和 `&` 对齐符不可用**
-
-`\\` 换行和 `&` 对齐符在表格单元格中会破坏 Markdown 解析。改用 $\displaystyle$ 将公式展开为单行。
-
-**规则 4：HTML 高亮框内只能使用行内公式 `$...$`**
-
-```markdown
-<!-- ❌ 错误：在 div 中使用 $$...$$ -->
-<div class="p-4 bg-blue-50 border-l-4 border-blue-500 rounded-lg my-4">
-定理：$$
-E = mc^2
-$$
-</div>
-
-<!-- ✅ 正确：div 中使用 $...$，多公式可分行写 -->
-<div class="p-4 bg-blue-50 border-l-4 border-blue-500 rounded-lg my-4">
-
-定理：$E = mc^2$
-
-（如需较大公式，此处的 $\displaystyle \int_0^\infty f(x)\,dx$ 用 \displaystyle 放大）
-
-</div>
-```
-
-> **根本原因：** Slidev 中的 KaTeX 渲染器只处理位于 Markdown 根层级的 `$$...$$` 语法。嵌套在 HTML 标签（`<div>`、`<span>`、`<p>` 等）或 Markdown 表格中的 `$$...$$` 不会被 KaTeX 处理，从而原样显示为 `$$` 文本。
->
-> 行内公式 `$...$` 则不受此限制——Markdown 表格和 HTML 标签内的 `$...$` 均可被正确渲染。
+**表格中的公式**：若公式包含 `|` 管道符，用 `\vert` 替代：`$\mathbf{x}_{T\vert t_n}^\theta$`。注意 `|` 在 Markdown 表格中即使位于 `$...$` 内也会被部分解析器误认为列分隔符，因此在表格单元格的公式中**必须**将所有 `|` 替换为 `\vert`。
 
 ### 4. 图片引用（原生 Markdown）
 
@@ -228,69 +155,36 @@ $$
 
 如果当前没有 Slidev 项目，需要初始化：
 
-1. **处理 arXiv 源码压缩包（如 `.tar.gz`、`.zip`）**：
-   - 检查用户提供的源码路径是否为压缩包（以 `.tar.gz`、`.tgz`、`.zip` 结尾）
-   - 如果是压缩包，先解压到一个独立的 `paper_source/` 文件夹：
-     ```bash
-     # 创建 paper_source 文件夹存放解压后的源码
-     mkdir -p paper_source
-     
-     # 根据后缀选择解压方式
-     tar -xzf <arxiv-file>.tar.gz -C paper_source/   # 适用于 .tar.gz
-     unzip <arxiv-file>.zip -d paper_source/          # 适用于 .zip
-     
-     # 解压后 paper_source/ 中即包含 .tex 文件和 figures/ 等
-     ```
-   - 解压后，后续步骤中的"源码路径"均指向 `paper_source/` 目录
-   - **注意**：`paper_source/` 仅用于存放原始源码，slides 项目建在**独立的文件夹**中（见下一步）
+1. **检查是否有 `slides.md`**（Slidev 项目标志）
+   - 有 → 直接使用，进入 Step 2
+   - 无 → 在用户指定的位置新建文件夹，初始化 Slidev 项目
 
-2. **创建独立的 slides 项目文件夹**（与 `paper_source/` 平级）：
-   ```bash
-   # 在 paper_source/ 同一父目录下，创建 slides 项目文件夹
-   mkdir -p rex-seminar
-   cd rex-seminar
-   ```
-   - slides 项目文件夹与 `paper_source/` 平级，互不干扰
-   - 这样做的好处：解压的源码仅用于读取素材，slides 项目独立干净
-
-3. **检查环境**（优先尝试全局安装，失败则本地安装）：
+2. **初始化方式**（优先尝试全局安装，失败则本地安装）：
    ```bash
    # 先检查全局 slidev 是否可用
    slidev --version 2>/dev/null || npm install -g @slidev/cli @slidev/theme-default playwright-chromium
+
+   # 创建项目结构
+   mkdir -p project-name
+   cd project-name
    ```
 
-4. **创建 `figures/` 文件夹**（唯一图片目录）：
+3. **创建 `figures/` 文件夹**（唯一图片目录）：
    ```bash
    mkdir -p figures
    ```
 
-5. **创建 `styles/` 目录并写入全局滚动条样式**（确保所有页面可滚动）：
+4. **删除 `public/` 文件夹**（如果初始化后自动生成）：
    ```bash
-   mkdir -p styles
-   cat > styles/index.css << 'EOF'
-.slidev-slide-container { overflow: visible !important; }
-.slidev-slide-content { overflow: visible !important; }
-.slidev-page { overflow-y: scroll !important; }
-EOF
+   rm -rf public 2>/dev/null
+   # 如果存在 public/figures/ 等目录，一并删除
    ```
-   Slidev 会自动加载 `styles/index.css` 作为全局样式。
+   项目只维护一个 `figures/` 文件夹作为统一图片目录。
 
-6. **清理非必要文件和目录**（`styles/` 是全局样式，如需保留则跳过删除）：
-   ```bash
-   rm -rf public node_modules dist 2>/dev/null
-   ```
-   **说明：** 创建 slides 项目后，`node_modules/`、`dist/`、`public/`、`styles/` 均为构建产物或辅助文件，**非必要保留**。最终交付物只需 `slides.md` + `figures/` 两个核心文件。
-   - `node_modules/` — npm 依赖包（`npm install` 可重建）
-   - `dist/` — `slidev build` 的构建输出
-   - `public/` — Slidev 默认静态资源目录（我们统一用 `figures/` 代替）
-   - `styles/` — 全局样式辅助文件（可按需保留）
-
-7. **创建 `.gitignore`**：
+5. **创建 `.gitignore`**：
    ```
    node_modules/
    dist/
-   public/
-   styles/
    .DS_Store
    *.log
    ```
@@ -298,8 +192,6 @@ EOF
 ### Step 2：读取并分析 LaTeX 源码
 
 1. 找到用户提供的 LaTeX 源码文件夹或压缩包中的主要 `.tex` 文件（通常是 `icml_camera_ready.tex`、`neurips_2025.tex`、`main.tex` 等）
-   - 如果是解压到 `paper_source/` 的，源码目录为 `../paper_source/`
-   - 如果是直接提供的文件夹，使用该文件夹路径
 
 2. **扫描论文结构**——使用 Grep/Read 工具提取以下章节：
    - `\begin{abstract}` ... `\end{abstract}` → 摘要
@@ -354,7 +246,7 @@ EOF
    - 特别注意：`\boldsymbol{}` 在 KaTeX 中需保持为 `\boldsymbol{}`（KaTeX 支持）
    - 注意 `\mathcal{}`、`\mathbb{}`、`\mathfrak{}` 等在 KaTeX 中均支持
 
-### Step 4：复制图片素材（保留子文件夹结构）
+### Step 4：复制图片素材
 
 1. 找到 LaTeX 源码包中的 `figures/` 文件夹（可能也叫 `fig/`、`images/`、`imgs/` 等）
 
@@ -364,29 +256,16 @@ EOF
    - **对比实验结果表格**（截图或自动生成）
    - **算法示意图**（TikZ 或绘制的图）
 
-3. **将整个图片文件夹递归复制到 `figures/` 目录，保留原有子文件夹结构**：
+3. **将选中的图片复制到统一图片目录**：
    ```bash
-   # 如果解压到了 paper_source/（与 slides 项目平级）
-   cp -r ../paper_source/figures/* figures/
-
-   # 如果是直接指定了源码文件夹路径
-   cp -r <源码文件夹路径>/figures/* figures/
+   cp <paper-path>/figures/*.png figures/
+   cp <paper-path>/figures/*.jpg figures/
    ```
-   这样做的目的是：
-   - 如果原文的 `figures/` 下有子文件夹（如 `figures/uncond_sampling/`、`figures/cond_sampling/`、`figures/al3/` 等），这些子文件夹及层次结构会被**原样保留**
-   - 避免因同名文件在不同子文件夹中产生冲突
-   - 方便在 `slides.md` 中通过子文件夹路径区分不同实验的图片
 
-4. **图片引用路径**：在 `slides.md` 中按子文件夹路径引用图片：
+4. **图片引用路径**：在 `slides.md` 中统一使用 `./figures/xxx.png` 路径：
    ```markdown
-   <!-- 无子文件夹 -->
-   ![](./figures/fig2_rex_overview.png)
-
-   <!-- 有子文件夹 -->
-   ![](./figures/uncond_sampling/ddim_celebhq.png)
-   ![](./figures/cond_sampling/50/rex_rk4/a_close_up.png)
+   ![](./figures/xxx.png)
    ```
-   确保 `slides.md` 中的每个 `./figures/...` 路径与 `figures/` 目录下的实际路径完全一致（包括大小写、子文件夹层次）。
 
 5. **重要原则：所有图片和图示均来自原文素材，不自行绘制任何框图或流程图。**
    - 论文中已有的架构图、对比图、实验曲线图直接使用
@@ -476,38 +355,6 @@ EOF
 - 列出 6-10 篇核心参考文献
 - 在引用处的上下文简要说明引用理由
 
-### Step 7：后处理——修复行内公式空格
-
-撰写完 `slides.md` 后，必须执行以下正则替换，修复行内公式首尾空格问题。
-
-#### 问题现象
-
-Slidev v52+ 要求行内公式 `$` 紧邻公式内容，`$ x $` 不会渲染而会显示为文字。
-
-#### 修复命令
-
-```bash
-cd <project>
-# 使用 sed 修复所有行内公式首尾空格
-sed -i 's/\$ \([^$]*\) \$/$\1$/g' slides.md
-```
-
-这条命令会将所有 `$ ... $` 模式（其中 `...` 不包含 `$`）替换为 `$...$`，去除首尾空格。
-
-#### 验证修复
-
-修复后检查公式数量是否一致：
-```bash
-# 统计行内公式数量
-grep -o '\$[^$]*\$' slides.md | wc -l
-```
-确保修复前后公式数量不变（没有因为公式内部包含 `$` 而错误拆分）。
-
-#### 注意
-- 该命令仅去除 `$` 与内容之间紧邻的一个空格，不改变公式内部的空格
-- 如果公式本身包含 `$` 字符（极少见），需要手动检查
-- 运行后手动抽查几处复杂公式，确认渲染正常
-
 ---
 
 ## 分页原则
@@ -522,44 +369,12 @@ grep -o '\$[^$]*\$' slides.md | wc -l
 
 ## 编译验证
 
-生成 `slides.md` 后，**必须**依次执行以下检查和修复：
+生成 `slides.md` 后，**必须**执行以下检查：
 
-### 第 1 步：修复行内公式空格
-
-```bash
-cd <project>
-sed -i 's/\$ \([^$]*\) \$/$\1$/g' slides.md
-```
-
-去除所有 `$ 公式 $` 中 `$` 与公式内容之间的首尾空格，确保 KaTeX 能正常渲染。
-
-### 第 2 步：编译测试
-
-```bash
-cd <project> && slidev build slides.md 2>&1
-```
-
-### 第 3 步：定位并修复错误
-
-如果编译报错，定位 KaTeX 无法解析的公式。常见问题：
-- `$` 与内容之间仍有空格 → 重新运行第 1 步的 sed 命令
-- 未展开的 LaTeX 自定义命令 → 检查 Step 3 的替换映射表是否完整
-- 特殊字符使用不当（`&`、`\\`、`\|`、`_` 等）→ 手动修复
-- `$$...$$` 仍在 `<div>` 或表格中 → 改为 `$...$`
-
-### 第 4 步：重新编译直到通过
-
-修复后重新运行 `slidev build slides.md`，直到编译成功。
-
-### 第 5 步：检查图片
-
-编译通过后检查 `dist/` 中是否包含正确的图片文件（路径应为 `./figures/xxx.png`）。
-
-### 第 6 步：抽检公式渲染
-
-打开生成的 `dist/index.html`（或启动 `slidev slides.md` 开发服务器），抽查 3-5 处复杂公式：
-- 确认没有 `$ 文字 $` 或 `$$` 原文显示
-- 确认行内公式和行间公式均正确渲染为数学符号
+1. 编译：`cd <project> && slidev build slides.md`
+2. 如果编译报错，定位 KaTeX 无法解析的公式（通常是 `&`、`\\`、`\|`、`_`、未展开的 LaTeX 自定义命令等特殊字符使用不当）
+3. 修复后重新编译，直到编译通过
+4. 编译通过后检查 `dist/` 中是否包含正确的图片文件（图片引用路径应为 `./figures/xxx.png`）
 
 ---
 
@@ -572,52 +387,20 @@ cd <project> && slidev build slides.md 2>&1
 - **不要**同时保留 `public/` 和 `figures/`——项目仅维护一个 `figures/` 文件夹
 
 ### Q2: 公式渲染为 `$$` 文本
-**最常见原因及解决方案（按出现频率排序）：**
+原因通常是：
+- 公式中的 `|` 与 Markdown 表格冲突 → 用 `\vert` 替代
+- 公式紧邻中文标点 → 在标点前加空格
+- LaTeX 自定义命令未展开 → 检查导言区命令是否全部替换
+- 公式在 HTML 标签内不被处理 → 移出 HTML 或使用 Markdown 原生表格
 
-1. **行内公式 `$ 内容 $` 含有首尾空格** ← 最常见
-   - 原因：Slidev v52+ 要求行内公式 `$` 紧邻内容，`$ x $` 不会渲染
-   - 解决：运行 `sed -i 's/\$ \([^$]*\) \$/$\1$/g' slides.md`
-   - 参考：Step 7
-
-2. **`$$...$$` 放在 HTML 标签（如 `<div>`）内部**
-   - 原因：KaTeX 不处理 HTML 标签内的 `$$...$$`
-   - 解决：将 `$$...$$` 移出 HTML 标签，或改用 `$...$` 行内公式
-   - 参考：格式规范第 3 节规则 4
-
-3. **`$$...$$` 放在 Markdown 表格单元格中**
-   - 原因：表格单元格属于 HTML 上下文，KaTeX 不处理
-   - 解决：改用 `$\displaystyle ...$` 行内格式
-   - 参考：格式规范第 3 节规则 1
-
-4. **公式中的 `|` 与 Markdown 表格列分隔符冲突**
-   - 解决：用 `\vert` 替代 `|`：`$\mathbf{x}_{T\vert t_n}$`
-   - 参考：格式规范第 3 节规则 2
-
-5. **公式紧邻中文标点**
-   - 解决：在标点前加空格，如 `$公式$ ；`
-   - 参考：格式规范第 3 节
-
-6. **LaTeX 自定义命令未展开**
-   - 解决：检查导言区命令（`\newcommand` 等）是否全部替换为 KaTeX 标准命令
-   - 参考：Step 3
-
-### Q3: 页面内容被截断 / 滑动轴不生效
-需要在项目中创建 `styles/index.css` 文件（Slidev 自动加载），写入：
+### Q3: 页面内容被截断
+在 frontmatter 后添加：
 ```css
-.slidev-slide-container { overflow: visible !important; }
-.slidev-slide-content { overflow: visible !important; }
-.slidev-page { overflow-y: scroll !important; }
+<style>
+.slidev-page { overflow-y: auto !important; }
+</style>
 ```
-同时 frontmatter 中通过 `head:` 注入样式作为补充：
-```yaml
-head:
-  - style: |
-      .slidev-page, .slidev-slide-content { overflow-y: scroll !important; }
-```
-
-**不能使用 slides.md 文件体中的 `<style>` 块**：Slidev 会将其作为 Vue 作用域样式编译（添加 `data-v-*` 属性选择器），因作用域 ID 不匹配而无法生效。
-
-**不能只设 `overflow-y` 而忽略 `overflow: hidden`**：Slidev 默认在 `.slidev-slide-container` 和 `.slidev-slide-content` 上设置了 `overflow: hidden`，即使给外层加滚动条，内容仍然被内层容器裁剪。需要将内层容器改为 `overflow: visible`，再给外层加 `overflow-y: scroll`。
+或者将长页面拆分为多个页面（每页 15-20 行内容为宜）。
 
 ### Q4: `slidev` 命令找不到
 全局安装：`npm install -g @slidev/cli`

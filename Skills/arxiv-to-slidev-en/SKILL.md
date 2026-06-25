@@ -28,43 +28,47 @@ transition: slide-left
 monaco: false
 lineNumbers: false
 katex: true
-head:
-  - style: |
-      .slidev-page, .slidev-slide-content { overflow-y: scroll !important; }
 ---
+
+<style>
+.slidev-page { overflow-y: auto !important; }
+</style>
 ```
 
 **Notes:**
 - `katex: true` — explicitly enables KaTeX math rendering (Slidev v52+ does NOT enable it by default; this field is required)
-- `head:` — injects global CSS via the frontmatter `head` option (supplementary approach)
-
-#### Scrollbar Setup (Critical)
-
-Slidev sets `overflow: hidden` on `.slidev-slide-container` and `.slidev-slide-content` by default, which clips overflowing content and prevents scrolling.
-
-Create `styles/index.css` in the project root (Slidev auto-loads it as a global stylesheet):
-
-```css
-/* styles/index.css: override Slidev's default overflow:hidden */
-.slidev-slide-container { overflow: visible !important; }
-.slidev-slide-content { overflow: visible !important; }
-.slidev-page { overflow-y: scroll !important; }
-```
-
-**Three container layers explained:**
-- `.slidev-slide-container` — innermost wrapper, `overflow: hidden` by default → changed to `visible`
-- `.slidev-slide-content` — the slide content container (absolutely positioned, centered), `overflow: hidden` by default → changed to `visible`
-- `.slidev-page` — outermost page wrapper, `overflow-y: scroll` to always show a vertical scrollbar
-
-**Why not use a `<style>` block in slides.md?** Slidev compiles `<style>` blocks in `slides.md` as Vue scoped styles (adding `data-v-*` attribute selectors). The scoped IDs don't match Slidev's actual DOM elements, so the styles never take effect. `styles/index.css` is a global stylesheet that bypasses Vue's scoping entirely. The `head:` frontmatter field serves as a supplementary fallback.
-
-**Cleanup note:** These intermediate files (`node_modules/`, `dist/`, `public/`, `styles/`) are build artifacts or helpers and can be deleted — only `slides.md` + `figures/` are the final deliverables (see Step 1 cleanup instructions).
+- Overflow and opacity: Slidev default theme applies `opacity: 0.5` to the first paragraph after `h1` (`.slidev-layout h1 + p`). Must add CSS override in the frontmatter:
+  ```yaml
+  head:
+    - style: |
+        .slidev-page, .slidev-slide-content { overflow-y: scroll !important; }
+        .slidev-layout h1 + p { opacity: 1 !important; }
+  ```
+- Font size hierarchy: Maintain consistent font sizes across all slides. Formula sizes should match the surrounding text scale. Use `\displaystyle` only when necessary.
+- Always add a space between text and `$...$` delimiters — text immediately adjacent to `$` causes KaTeX parsing failures:
+  - ❌ `adapt$\mathbf{\Phi}$to the`
+  - ✅ `adapt $\mathbf{\Phi}$ to the`
+- Prefer `\boldsymbol{}` over `\mathbf{}` for Greek letters (`\boldsymbol{\Phi}`, `\boldsymbol{\Psi}`) for maximum KaTeX compatibility.
 
 ### 2. Slide Separators & Layout
 
 - Each `---` separates one slide
 - Cover page: use `layout: center` and `class: text-center`
-- Two-column layout: use HTML `<div class="grid grid-cols-2 gap-4">` + one `<div>` per column (this is the only allowed exception for using divs)
+- Grid layout for images: use `<div class="grid grid-cols-N gap-2">` (N = number of columns), with each image in its own `<div>` using native Markdown syntax:
+  ```html
+  <div class="grid grid-cols-5 gap-2">
+  <div>
+
+  ![](./figures/img1.png)
+
+  </div>
+  <div>
+
+  ![](./figures/img2.png)
+
+  </div>
+  </div>
+  ```
 - **No `<br>` tags** — use blank lines or two trailing spaces for line breaks
 
 ### 3. Math Formulas (Native Markdown)
@@ -115,15 +119,19 @@ Markdown tables and HTML tags **cannot use `$$...$$` display math**, or they wil
 | DDIM | $\displaystyle x_{t-1} = \frac{\alpha_{t-1}}{\alpha_t}x_t + \sigma_{t-1}\epsilon_\theta$ |
 ```
 
-**Rule 2: Replace `|` with `\vert` in table formulas**
+**Rule 2: Replace `|` with `\vert` in table formulas (CRITICAL)**
+
+**Root cause:** Markdown table parsers process `|` as column separators BEFORE recognizing `$...$` math delimiters. Even `|` inside `$...$` will be treated as a table column separator, causing the cell to be split incorrectly and the formula to display as garbled text.
 
 ```markdown
-<!-- ❌ WRONG: | conflicts with table column separator -->
-| $\mathbf{x}_{T|t_n}$ | Conditional distribution |
+<!-- ❌ WRONG: | inside $...$ is treated as table separator -->
+| $\mathbf{x}_{T|t_n}$ | Conditional distribution |   ← THIS BREAKS THE TABLE
 
 <!-- ✅ CORRECT: use \vert -->
 | $\mathbf{x}_{T\vert t_n}$ | Conditional distribution |
 ```
+
+**Checklist:** In every table cell that contains a formula, scan for `|` characters and replace ALL of them with `\vert`. This applies to complex formulas with subscript pipes like `\mathbf{x}_{0|\overline{\sigma}_n}` → `\mathbf{x}_{0\vert\overline{\sigma}_n}`.
 
 **Rule 3: No line breaks `\\` or alignment `&` in table cells**
 
@@ -217,69 +225,35 @@ Use `---` for section dividers within a slide. **No `<hr>` tags.**
 
 If no Slidev project exists, initialize one:
 
-1. **Handle arXiv source archive** (`.tar.gz`, `.zip`, etc.):
-   - Check if the provided source path is an archive (ends with `.tar.gz`, `.tgz`, `.zip`)
-   - If it is an archive, extract it to a dedicated `paper_source/` folder:
-     ```bash
-     # Create paper_source folder for the extracted source
-     mkdir -p paper_source
-     
-     # Extract based on file extension
-     tar -xzf <arxiv-file>.tar.gz -C paper_source/   # for .tar.gz
-     unzip <arxiv-file>.zip -d paper_source/          # for .zip
-     
-     # After extraction, paper_source/ contains .tex files and figures/ etc.
-     ```
-   - From this point, the "source path" refers to the `paper_source/` directory
-   - **Note**: `paper_source/` is for source material only — the slides project will be in a **separate folder** (see next step)
+1. **Check for `slides.md`** (Slidev project marker)
+   - Exists → use it, go to Step 2
+   - Does not exist → create new folder and initialize
 
-2. **Create a separate slides project folder** (sibling to `paper_source/`):
-   ```bash
-   # Create slides project folder next to paper_source/
-   mkdir -p rex-seminar
-   cd rex-seminar
-   ```
-   - The slides folder is a sibling of `paper_source/`, keeping them independent
-   - Benefit: extracted source is read-only material; the slides project stays clean
-
-3. **Check environment** (prefer global install, fall back to local):
+2. **Initialize** (prefer global install, fall back to local):
    ```bash
    # Check if global slidev is available
    slidev --version 2>/dev/null || npm install -g @slidev/cli @slidev/theme-default playwright-chromium
+
+   # Create project structure
+   mkdir -p project-name
+   cd project-name
    ```
 
-4. **Create `figures/` folder** (single image directory):
+3. **Create `figures/` folder** (single image directory):
    ```bash
    mkdir -p figures
    ```
 
-5. **Create `styles/` directory with global scrollbar CSS** (ensures all slides are scrollable):
+4. **Delete `public/` folder** (if auto-generated during init):
    ```bash
-   mkdir -p styles
-   cat > styles/index.css << 'EOF'
-.slidev-slide-container { overflow: visible !important; }
-.slidev-slide-content { overflow: visible !important; }
-.slidev-page { overflow-y: scroll !important; }
-EOF
+   rm -rf public 2>/dev/null
    ```
-   Slidev auto-loads `styles/index.css` as a global stylesheet.
+   The project maintains only one `figures/` folder as the unified image directory.
 
-6. **Clean up non-essential files and directories**:
-   ```bash
-   rm -rf public node_modules dist 2>/dev/null
-   ```
-   **Note:** After creating the slides project, `node_modules/`, `dist/`, `public/`, and `styles/` are all build artifacts or helper files — **not required for the final deliverable**. The only essential files are `slides.md` + `figures/`.
-   - `node_modules/` — npm dependencies (re-creatable via `npm install`)
-   - `dist/` — `slidev build` output
-   - `public/` — Slidev default static directory (we use `figures/` instead)
-   - `styles/` — global CSS helper (keep if you want scrollbars, but not a deliverable)
-
-7. **Create `.gitignore`**:
+5. **Create `.gitignore`**:
    ```
    node_modules/
    dist/
-   public/
-   styles/
    .DS_Store
    *.log
    ```
@@ -287,8 +261,6 @@ EOF
 ### Step 2: Read & Analyze LaTeX Source
 
 1. Locate the main `.tex` file (typically `icml_camera_ready.tex`, `neurips_2025.tex`, `main.tex`, etc.)
-   - If extracted to `paper_source/`, the source path is `../paper_source/`
-   - If a folder was provided directly, use that folder path
 
 2. **Scan paper structure** using Grep/Read:
    - `\begin{abstract}` ... `\end{abstract}` → Abstract
@@ -355,11 +327,7 @@ This is critical for correct Markdown output.
 
 3. **Recursively copy the entire figures folder, preserving subdirectory structure**:
    ```bash
-   # If extracted to paper_source/ (sibling of slides project)
-   cp -r ../paper_source/figures/* figures/
-
-   # If a source folder path was provided directly
-   cp -r <source-folder>/figures/* figures/
+   cp -r <paper-path>/figures/* figures/
    ```
    This ensures:
    - If the paper has subdirectories (e.g., `figures/uncond_sampling/`, `figures/cond_sampling/`), they are preserved
@@ -545,23 +513,14 @@ Open `dist/index.html` (or run `slidev slides.md` dev server). Check 3-5 formula
    - Fix: Check preamble for `\newcommand` etc.
    - See: Step 3
 
-### Q3: Slide content clipped / Scrollbar not showing
-Create `styles/index.css` in the project directory (Slidev loads it automatically):
+### Q3: Slide content clipped
+**No extra handling needed.** The frontmatter already includes:
 ```css
-.slidev-slide-container { overflow: visible !important; }
-.slidev-slide-content { overflow: visible !important; }
-.slidev-page { overflow-y: scroll !important; }
+<style>
+.slidev-page { overflow-y: auto !important; }
+</style>
 ```
-Also add to the frontmatter `head:` field as a supplement:
-```yaml
-head:
-  - style: |
-      .slidev-page, .slidev-slide-content { overflow-y: scroll !important; }
-```
-
-**Do NOT use a `<style>` block in slides.md**: Slidev compiles it as a Vue scoped style (adding `data-v-*` attribute selectors) that won't match the actual DOM elements.
-
-**Setting `overflow-y` alone is insufficient**: Slidev defaults hide overflow on both `.slidev-slide-container` and `.slidev-slide-content` via `overflow: hidden`. You must set them to `overflow: visible` first, then add `overflow-y: scroll` on the outermost `.slidev-page`.
+This auto-adds scrollbars when content overflows. If a slide still feels crowded, split it (15-20 lines per slide).
 
 ### Q4: `slidev` command not found
 ```bash

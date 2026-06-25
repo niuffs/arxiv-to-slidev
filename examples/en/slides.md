@@ -433,7 +433,9 @@ $$
 3. **Build $\mathbf{\Upsilon}$ (Rex)** — Apply McCallum-Foster method to make $\mathbf{\Psi}$ algebraically reversible
 
 <div class="text-center text-lg my-4">
+
 $\mathbf{\Phi}$ (explicit RK) $\to$ $\mathbf{\Psi}$ (Princeps) $\to$ $\mathbf{\Upsilon}$ (Rex)
+
 </div>
 
 ### Princeps Construction

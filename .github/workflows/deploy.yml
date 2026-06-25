@@ -25,7 +25,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-      - run: npm install -g @slidev/cli @slidev/theme-default
+      - run: npm install -g @slidev/cli @slidev/theme-default @slidev/theme-apple-basic @slidev/theme-seriph
 
       - name: Build CN
         run: |

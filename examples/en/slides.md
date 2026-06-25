@@ -1,5 +1,5 @@
 ---
-theme: default
+theme: apple-basic
 title: 'Rex: A Family of Reversible Exponential (Stochastic) Runge-Kutta Solvers'
 author: 'Zander W. Blasingame & Chen Liu'
 keywords: 'diffusion models, reversible solvers, Runge-Kutta'

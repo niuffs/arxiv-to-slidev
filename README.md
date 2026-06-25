@@ -49,17 +49,16 @@ theme: default  # 当前使用的主题
 ---
 ```
 
-可选主题（需全局安装）：
+可选主题：
 
 | 主题 | 安装命令 | 风格 |
 |------|---------|------|
-| `default` | 预装 | 简洁现代，无衬线字体 |
+| `default` | 预装（`@slidev/theme-default`） | 简洁现代，无衬线字体 |
 | `seriph` | `npm install -g @slidev/theme-seriph` | 衬线字体，学术风格 |
-| `apple` | `npm install -g @slidev/theme-apple` | Apple 风格演示 |
 
 使用示例：在 `slides.md` 的 frontmatter 中将 `theme: default` 改为 `theme: seriph` 即可应用学术衬线主题。
 
-也可搜索社区主题：`npm search @slidev/theme-`
+也可搜索社区主题：`npm search slidev-theme`
 
 ### 示例
 
@@ -120,17 +119,16 @@ theme: default  # currently used
 ---
 ```
 
-Available themes (require global install):
+Available themes:
 
 | Theme | Install | Style |
 |-------|---------|-------|
-| `default` | pre-installed | Clean modern, sans-serif |
+| `default` | pre-installed (`@slidev/theme-default`) | Clean modern, sans-serif |
 | `seriph` | `npm install -g @slidev/theme-seriph` | Serif font, academic |
-| `apple` | `npm install -g @slidev/theme-apple` | Apple-style presentation |
 
 Usage: change `theme: default` to `theme: seriph` in `slides.md` frontmatter.
 
-Search community themes: `npm search @slidev/theme-`
+Search community themes: `npm search slidev-theme`
 
 ### Examples
 

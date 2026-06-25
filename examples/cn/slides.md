@@ -1,5 +1,5 @@
 ---
-theme: default
+theme: apple-basic
 title: 'Rex -- 可逆指数型随机 Runge-Kutta 求解器族'
 author: Zander W. Blasingame, Chen Liu
 keywords: reversible solvers,diffusion models,Runge-Kutta,ICML 2026

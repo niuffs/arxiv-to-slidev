@@ -31,26 +31,19 @@ jobs:
         run: |
           cd examples/cn
           npx slidev build slides.md --base /arxiv-to-slidev/cn/
-          # Inject SPA path restore script
-          node -e "var f=require('fs'),h=f.readFileSync('dist/index.html','utf8');h=h.replace('</head>','<script>var r=sessionStorage.getItem(\"spa\");if(r){sessionStorage.removeItem(\"spa\");history.replaceState(null,\"\",r)}</script></head>');f.writeFileSync('dist/index.html',h)"
+          # Prevent vite:preloadError from throwing (CSS timing bug)
+          sed -i 's|</head>|<script>window.addEventListener("vite:preloadError",function(e){e.preventDefault()})</script></head>|' dist/index.html
           mkdir -p ../../_site/cn && cp -r dist/* ../../_site/cn/
 
       - name: Build EN
         run: |
           cd examples/en
           npx slidev build slides.md --base /arxiv-to-slidev/en/
-          node -e "var f=require('fs'),h=f.readFileSync('dist/index.html','utf8');h=h.replace('</head>','<script>var r=sessionStorage.getItem(\"spa\");if(r){sessionStorage.removeItem(\"spa\");history.replaceState(null,\"\",r)}</script></head>');f.writeFileSync('dist/index.html',h)"
+          sed -i 's|</head>|<script>window.addEventListener("vite:preloadError",function(e){e.preventDefault()})</script></head>|' dist/index.html
           mkdir -p ../../_site/en && cp -r dist/* ../../_site/en/
 
-      - name: Root 404 + redirect
+      - name: Root redirect
         run: |
-          cat > _site/404.html << 'EOF'
-          <!DOCTYPE html><html><head><meta charset="utf-8"><title>Redirecting</title><script>
-          var p=location.pathname;if(p.includes('/cn/')){sessionStorage.setItem('spa',p);location.replace('./cn/')}
-          else if(p.includes('/en/')){sessionStorage.setItem('spa',p);location.replace('./en/')}
-          else{location.replace('./cn/')}
-          </script></head><body></body></html>
-          EOF
           cat > _site/index.html << 'EOF'
           <!DOCTYPE html><html><head><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=./cn/"><title>Redirecting</title></head><body><a href="./cn/">arxiv-to-slidev</a></body></html>
           EOF

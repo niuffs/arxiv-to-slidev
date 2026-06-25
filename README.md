@@ -39,6 +39,28 @@ Markdown 格式的幻灯片（如 Marp）格式单一，排版能力有限；而
 | 黑暗模式 | `D` |
 | 全屏 | `F` |
 
+### Slidev 主题切换
+
+Slidev 支持通过 frontmatter 的 `theme:` 字段切换整体视觉风格：
+
+```yaml
+---
+theme: default  # 当前使用的主题
+---
+```
+
+可选主题（需全局安装）：
+
+| 主题 | 安装命令 | 风格 |
+|------|---------|------|
+| `default` | 预装 | 简洁现代，无衬线字体 |
+| `seriph` | `npm install -g @slidev/theme-seriph` | 衬线字体，学术风格 |
+| `apple` | `npm install -g @slidev/theme-apple` | Apple 风格演示 |
+
+使用示例：在 `slides.md` 的 frontmatter 中将 `theme: default` 改为 `theme: seriph` 即可应用学术衬线主题。
+
+也可搜索社区主题：`npm search @slidev/theme-`
+
 ### 示例
 
 为验证 Skill 效果，以 **ICML 2026** 论文为例：
@@ -87,6 +109,28 @@ By leveraging the [Slidev project](https://github.com/slidevjs/slidev), this ski
 | Overview mode | `O` |
 | Dark mode | `D` |
 | Fullscreen | `F` |
+
+### Slidev Themes
+
+Change the overall visual style via the `theme:` field in the frontmatter:
+
+```yaml
+---
+theme: default  # currently used
+---
+```
+
+Available themes (require global install):
+
+| Theme | Install | Style |
+|-------|---------|-------|
+| `default` | pre-installed | Clean modern, sans-serif |
+| `seriph` | `npm install -g @slidev/theme-seriph` | Serif font, academic |
+| `apple` | `npm install -g @slidev/theme-apple` | Apple-style presentation |
+
+Usage: change `theme: default` to `theme: seriph` in `slides.md` frontmatter.
+
+Search community themes: `npm search @slidev/theme-`
 
 ### Examples
 

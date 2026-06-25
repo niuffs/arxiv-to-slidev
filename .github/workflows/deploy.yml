@@ -31,15 +31,55 @@ jobs:
         run: |
           cd examples/cn
           npx slidev build slides.md --base /arxiv-to-slidev/cn/
-          # Inject hash fix script (Slidev hash history produces wrong URLs on subdirectory)
-          sed -i 's|</head>|<script>window.addEventListener("vite:preloadError",function(e){e.preventDefault()});(function(){var i=setInterval(function(){var h=location.hash;var m=h.match(/^#\/(?:arxiv-to-slidev\/(?:cn|en)\/)(.+)$/);if(m&&m[1]!=="1")history.replaceState(null,"","#"+m[1])},100);window.addEventListener("popstate",function(){var h=location.hash;var m=h.match(/^#\/(?:arxiv-to-slidev\/(?:cn|en)\/)(.+)$/);if(m)history.replaceState(null,"","#"+m[1])})})();</script></head>|' dist/index.html
+          # Inject hash fix via temp script (avoids YAML/bash/Node triple escaping issues)
+          cat > /tmp/fix_hash.js << 'FIXEOF'
+          var fs = require('fs');
+          var html = fs.readFileSync('dist/index.html', 'utf8');
+          var script = '<script>' +
+            'window.addEventListener("vite:preloadError",function(e){e.preventDefault()});' +
+            '(function(){' +
+            'var i=setInterval(function(){' +
+            'var h=location.hash;' +
+            'var m=h.match(/^#\/(?:arxiv-to-slidev\/(?:cn|en)\/(.+)$/);' +
+            'if(m&&m[1]!=="1")history.replaceState(null,"","#"+m[1])' +
+            '},100);' +
+            'window.addEventListener("popstate",function(){' +
+            'var h=location.hash;' +
+            'var m=h.match(/^#\/(?:arxiv-to-slidev\/(?:cn|en)\/(.+)$/);' +
+            'if(m)history.replaceState(null,"","#"+m[1])' +
+            '})})();</script>';
+          html = html.replace('</head>', script + '</head>');
+          fs.writeFileSync('dist/index.html', html);
+          console.log('Hash fix injected');
+          FIXEOF
+          node /tmp/fix_hash.js
           mkdir -p ../../_site/cn && cp -r dist/* ../../_site/cn/
 
       - name: Build EN
         run: |
           cd examples/en
           npx slidev build slides.md --base /arxiv-to-slidev/en/
-          sed -i 's|</head>|<script>window.addEventListener("vite:preloadError",function(e){e.preventDefault()});(function(){setInterval(function(){var h=location.hash;var m=h.match(/^#\/(?:arxiv-to-slidev\/(?:cn|en)\/)(.+)$/);if(m&&m[1]!=="1")history.replaceState(null,"","#"+m[1])},100);window.addEventListener("popstate",function(){var h=location.hash;var m=h.match(/^#\/(?:arxiv-to-slidev\/(?:cn|en)\/)(.+)$/);if(m)history.replaceState(null,"","#"+m[1])})})();</script></head>|' dist/index.html
+          cat > /tmp/fix_hash.js << 'FIXEOF'
+          var fs = require('fs');
+          var html = fs.readFileSync('dist/index.html', 'utf8');
+          var script = '<script>' +
+            'window.addEventListener("vite:preloadError",function(e){e.preventDefault()});' +
+            '(function(){' +
+            'var i=setInterval(function(){' +
+            'var h=location.hash;' +
+            'var m=h.match(/^#\/(?:arxiv-to-slidev\/(?:cn|en)\/(.+)$/);' +
+            'if(m&&m[1]!=="1")history.replaceState(null,"","#"+m[1])' +
+            '},100);' +
+            'window.addEventListener("popstate",function(){' +
+            'var h=location.hash;' +
+            'var m=h.match(/^#\/(?:arxiv-to-slidev\/(?:cn|en)\/(.+)$/);' +
+            'if(m)history.replaceState(null,"","#"+m[1])' +
+            '})})();</script>';
+          html = html.replace('</head>', script + '</head>');
+          fs.writeFileSync('dist/index.html', html);
+          console.log('Hash fix injected');
+          FIXEOF
+          node /tmp/fix_hash.js
           mkdir -p ../../_site/en && cp -r dist/* ../../_site/en/
 
       - name: Root redirect + 404.html

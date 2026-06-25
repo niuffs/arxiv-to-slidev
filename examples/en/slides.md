@@ -12,6 +12,7 @@ routerMode: hash
 head:
   - style: |
       .slidev-page, .slidev-slide-content { overflow-y: scroll !important; }
+      .slidev-layout h1 + p { opacity: 1 !important; }
 ---
 
 # **Rex**: A Family of Reversible Exponential<br>(Stochastic) Runge-Kutta Solvers
@@ -202,7 +203,7 @@ McCallum-Foster introduces the **coupling parameter** $\zeta \in (0,1]$:
 
 **Stability condition for linear test equation $\dot{x} = \lambda x$:**
 
-$|\Gamma| < 1 + \zeta$, where $\Gamma = 1 + \zeta - (1-\zeta)R(-h\lambda) - R(-h\lambda)R(h\lambda)$and$R(z)$ is the stability function of the underlying RK scheme.
+$|\Gamma| < 1 + \zeta$, where $\Gamma = 1 + \zeta - (1-\zeta)R(-h\lambda) - R(-h\lambda)R(h\lambda)$ and $R(z)$ is the stability function of the underlying RK scheme.
 
 </div>
 
@@ -420,12 +421,12 @@ $$
 
 1. **Choose $\mathbf{\Phi}$** — Pick any explicit (S)RK scheme (Euler, RK4, Dopri5, ShARK, ...)
 
-2. **Build $\mathbf{\Psi}$(Princeps)** — Apply exponential integrator (Lawson method) to adapt$\mathbf{\Phi}$ to the diffusion semi-linear structure
+2. **Build $\mathbf{\Psi}$ (Princeps)** — Apply exponential integrator (Lawson method) to adapt $\mathbf{\Phi}$ to the diffusion semi-linear structure
 
-3. **Build $\mathbf{\Upsilon}$(Rex)** — Apply McCallum-Foster method to make$\mathbf{\Psi}$ algebraically reversible
+3. **Build $\mathbf{\Upsilon}$ (Rex)** — Apply McCallum-Foster method to make $\mathbf{\Psi}$ algebraically reversible
 
 <div class="text-center text-lg my-4">
-$\mathbf{\Phi}$(explicit RK)$\to$ $\mathbf{\Psi}$(Princeps)$\to$ $\mathbf{\Upsilon}$ (Rex)
+$\mathbf{\Phi}$ (explicit RK) $\to$ $\mathbf{\Psi}$ (Princeps) $\to$ $\mathbf{\Upsilon}$ (Rex)
 </div>
 
 ### Princeps Construction
@@ -434,7 +435,7 @@ The diffusion SDE is transformed to standard form via integrating factor + time 
 
 ### Rex Construction
 
-Princeps $\mathbf{\Psi}$is plugged into the McCallum-Foster framework with$\kappa_n = \Xi(\varsigma_n)$:
+Princeps $\mathbf{\Psi}$ is plugged into the McCallum-Foster framework with $\kappa_n = \Xi(\varsigma_n)$:
 
 ---
 
@@ -497,7 +498,7 @@ $$
 
 ## ODE Convergence
 
-If $\mathbf{\Phi}$is a$k$th-order explicit RK scheme, then **Rex inherits the same order**:
+If $\mathbf{\Phi}$ is a $k$th-order explicit RK scheme, then **Rex inherits the same order**:
 
 $$
 \|\mathbf{x}_n - \mathbf{x}_{t_n}\| \leq C h^k
@@ -505,7 +506,7 @@ $$
 
 ## SDE Strong Convergence
 
-If $\mathbf{\Phi}$is a strong$\xi$th-order SRK scheme, then **Princeps $\mathbf{\Psi}$also has strong order$\xi$**.
+If $\mathbf{\Phi}$ is a strong $\xi$th-order SRK scheme, then **Princeps $\mathbf{\Psi}$ also has strong order $\xi$**.
 
 <div class="p-4 bg-blue-50 border-l-4 border-blue-500 rounded-lg my-4">
 
@@ -555,10 +556,10 @@ where $R(z)$ is the stability function of the underlying RK scheme.
 |--------|--------------------|-------|-----|
 | **Async leapfrog** | $\hat{\mathbf{x}}_n = \mathbf{x}_n + \tfrac12\mathbf{f}_n h$<br>$\mathbf{v}_{n+1} = 2\mathbf{f}(\hat t_n,\hat{\mathbf{x}}_n) - \mathbf{v}_n$<br>$\mathbf{x}_{n+1} = \mathbf{x}_n + \mathbf{f}(\hat t_n,\hat{\mathbf{x}}_n)h$| 2nd |$\times$ |
 | **Rev. Heun** | $\hat{\mathbf{x}}_{n+1} = 2\mathbf{x}_n - \hat{\mathbf{x}}_n + \mathbf{f}h$<br>$\mathbf{x}_{n+1} = \mathbf{x}_n + \tfrac12[\mathbf{f}(t_{n+1},\hat{\mathbf{x}}_{n+1}) + \mathbf{f}(t_n,\hat{\mathbf{x}}_n)]h$| 2nd |$\checkmark$ |
-| **EDICT** | $\mathbf{x}^{\text{inter}} = a_n\mathbf{x}_n + b_n\mathbf{x}_{T|t_n}^\theta(\mathbf{y}_n)$<br>$\mathbf{y}^{\text{inter}} = a_n\mathbf{y}_n + b_n\mathbf{x}_{T|t_n}^\theta(\mathbf{x}^{\text{inter}})$| 0th |$\times$ |
+| **EDICT** | $\mathbf{x}^{\text{inter}} = a_n\mathbf{x}_n + b_n\mathbf{x}_{T\vert t_n}^\theta(\mathbf{y}_n)$<br>$\mathbf{y}^{\text{inter}} = a_n\mathbf{y}_n + b_n\mathbf{x}_{T\vert t_n}^\theta(\mathbf{x}^{\text{inter}})$| 0th |$\times$ |
 | **BDIA** | $\mathbf{x}_{n+1} = \mathbf{x}_{n-1} - \mathbf{\Phi}_{t_n,t_{n-1}}(\mathbf{x}_n) + \mathbf{\Phi}_{t_n,t_{n+1}}(\mathbf{x}_n)$| 1st |$\times$ |
-| **O-BELM** | $\overline{\mathbf{x}}_{n+1} = \frac{h_n^2}{h_{n-1}^2}\overline{\mathbf{x}}_{n-1} + \frac{h_{n-1}^2+h_n^2}{h_{n-1}^2}\overline{\mathbf{x}}_n - \frac{h_n(h_n+h_{n+1})}{h_{n+1}}\overline{\mathbf{x}}_{0|\overline{\sigma}_n}(\overline{\mathbf{x}}_n)$|$k$th | $\times$ |
-| **Rex** | $\mathbf{x}_{n+1} = \frac{\kappa_{n+1}}{\kappa_n}(\zeta\mathbf{x}_n + (1-\zeta)\hat{\mathbf{x}}_n) + \kappa_{n+1}\mathbf{\Psi}_h(\varsigma_n,\hat{\mathbf{x}}_n,\mathbf{W}_n)$| **Arbitrary$k$** | **$\checkmark$** |
+| **O-BELM** | $\overline{\mathbf{x}}_{n+1} = \frac{h_n^2}{h_{n-1}^2}\overline{\mathbf{x}}_{n-1} + \frac{h_{n-1}^2+h_n^2}{h_{n-1}^2}\overline{\mathbf{x}}_n - \frac{h_n(h_n+h_{n+1})}{h_{n+1}}\overline{\mathbf{x}}_{0\vert\overline{\sigma}_n}(\overline{\mathbf{x}}_n)$|$k$th | $\times$ |
+| **Rex** | $\mathbf{x}_{n+1} = \frac{\kappa_{n+1}}{\kappa_n}(\zeta\mathbf{x}_n + (1-\zeta)\hat{\mathbf{x}}_n) + \kappa_{n+1}\mathbf{\Psi}_h(\varsigma_n,\hat{\mathbf{x}}_n,\mathbf{W}_n)$| **Arbitrary $k$** | **$\checkmark$** |
 
 ---
 

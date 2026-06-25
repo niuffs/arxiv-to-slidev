@@ -12,6 +12,7 @@ routerMode: hash
 head:
   - style: |
       .slidev-page, .slidev-slide-content { overflow-y: scroll !important; }
+      .slidev-layout h1 + p { opacity: 1 !important; }
 ---
 
 # Rex: A Family of Reversible Exponential (Stochastic) Runge-Kutta Solvers
@@ -532,11 +533,33 @@ Rex 在所有步数下超越基线数个数量级。O-BELM 误差随步数增长
 
 # 无条件生成：定性比较
 
+<div class="grid grid-cols-5 gap-2">
+<div>
+
 ![](./figures/ddim_celebhq_inference_pipe10_seed0_0.png)
+
+</div>
+<div>
+
 ![](./figures/edict_celebhq_inference_pipe10_seed0_0.png)
+
+</div>
+<div>
+
 ![](./figures/bdia_celebhq_inference_pipe10_seed0_0.png)
+
+</div>
+<div>
+
 ![](./figures/belm_celebhq_inference10_seed0_0.png)
+
+</div>
+<div>
+
 ![](./figures/reversible_dpm_cifar10_inference_pipe10_seed0_0.png)
+
+</div>
+</div>
 
 从左到右：DDIM（非可逆）/ EDICT / BDIA / O-BELM / **Rex (RK4)** — 10 步，CelebA-HQ
 
@@ -654,13 +677,22 @@ Rex (Dopri5) 在能量分布的$\mathcal{W}_2$ 距离上达到**全场最优**�
 
 # Boltzmann 采样：能量分布对比
 
+<div class="grid grid-cols-2 gap-4">
+<div>
+
 ![](./figures/energies_rex.png)
 
 **Rex (Dopri5)** — 能量分布（更接近目标 Boltzmann 分布）
 
+</div>
+<div>
+
 ![](./figures/energies_dopri5.png)
 
 **标准 Dopri5** — 能量分布（存在偏差）
+
+</div>
+</div>
 
 ---
 

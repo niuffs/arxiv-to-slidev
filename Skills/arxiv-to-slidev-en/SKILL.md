@@ -1,6 +1,7 @@
 ---
 name: arxiv-to-slidev-en
 description: Automatically generate Slidev seminar presentations from arXiv LaTeX source code. Use this skill whenever the user provides an arXiv paper's LaTeX source (zip or folder) and asks to "make slides", "create a presentation", "seminar talk", "group meeting presentation", or "academic talk" — even if they don't explicitly mention this skill. This skill extracts abstract, introduction, method, experiments, conclusions etc. from LaTeX sources, builds a complete slidev project, auto-copies experimental figures, and produces a polished slides.md with proper math rendering and image paths.
+
 ---
 
 # arxiv-to-slidev-en: From arXiv LaTeX to Slidev Presentation
@@ -28,47 +29,45 @@ transition: slide-left
 monaco: false
 lineNumbers: false
 katex: true
+head:
+  - style: |
+      .slidev-page, .slidev-slide-content { overflow-y: scroll !important; }
 ---
-
-<style>
-.slidev-page { overflow-y: auto !important; }
-</style>
 ```
 
 **Notes:**
+
 - `katex: true` — explicitly enables KaTeX math rendering (Slidev v52+ does NOT enable it by default; this field is required)
-- Overflow and opacity: Slidev default theme applies `opacity: 0.5` to the first paragraph after `h1` (`.slidev-layout h1 + p`). Must add CSS override in the frontmatter:
-  ```yaml
-  head:
-    - style: |
-        .slidev-page, .slidev-slide-content { overflow-y: scroll !important; }
-        .slidev-layout h1 + p { opacity: 1 !important; }
-  ```
-- Font size hierarchy: Maintain consistent font sizes across all slides. Formula sizes should match the surrounding text scale. Use `\displaystyle` only when necessary.
-- Always add a space between text and `$...$` delimiters — text immediately adjacent to `$` causes KaTeX parsing failures:
-  - ❌ `adapt$\mathbf{\Phi}$to the`
-  - ✅ `adapt $\mathbf{\Phi}$ to the`
-- Prefer `\boldsymbol{}` over `\mathbf{}` for Greek letters (`\boldsymbol{\Phi}`, `\boldsymbol{\Psi}`) for maximum KaTeX compatibility.
+- `head:` — injects global CSS via the frontmatter `head` option (supplementary approach)
+
+#### Scrollbar Setup (Critical)
+
+Slidev sets `overflow: hidden` on `.slidev-slide-container` and `.slidev-slide-content` by default, which clips overflowing content and prevents scrolling.
+
+Create `styles/index.css` in the project root (Slidev auto-loads it as a global stylesheet):
+
+```css
+/* styles/index.css: override Slidev's default overflow:hidden */
+.slidev-slide-container { overflow: visible !important; }
+.slidev-slide-content { overflow: visible !important; }
+.slidev-page { overflow-y: scroll !important; }
+```
+
+**Three container layers explained:**
+
+- `.slidev-slide-container` — innermost wrapper, `overflow: hidden` by default → changed to `visible`
+- `.slidev-slide-content` — the slide content container (absolutely positioned, centered), `overflow: hidden` by default → changed to `visible`
+- `.slidev-page` — outermost page wrapper, `overflow-y: scroll` to always show a vertical scrollbar
+
+**Why not use a `<style>` block in slides.md?** Slidev compiles `<style>` blocks in `slides.md` as Vue scoped styles (adding `data-v-*` attribute selectors). The scoped IDs don't match Slidev's actual DOM elements, so the styles never take effect. `styles/index.css` is a global stylesheet that bypasses Vue's scoping entirely. The `head:` frontmatter field serves as a supplementary fallback.
+
+**Cleanup note:** These intermediate files (`node_modules/`, `dist/`, `public/`, `styles/`) are build artifacts or helpers and can be deleted — only `slides.md` + `figures/` are the final deliverables (see Step 1 cleanup instructions).
 
 ### 2. Slide Separators & Layout
 
 - Each `---` separates one slide
 - Cover page: use `layout: center` and `class: text-center`
-- Grid layout for images: use `<div class="grid grid-cols-N gap-2">` (N = number of columns), with each image in its own `<div>` using native Markdown syntax:
-  ```html
-  <div class="grid grid-cols-5 gap-2">
-  <div>
-
-  ![](./figures/img1.png)
-
-  </div>
-  <div>
-
-  ![](./figures/img2.png)
-
-  </div>
-  </div>
-  ```
+- Two-column layout: use HTML `<div class="grid grid-cols-2 gap-4">` + one `<div>` per column (this is the only allowed exception for using divs)
 - **No `<br>` tags** — use blank lines or two trailing spaces for line breaks
 
 ### 3. Math Formulas (Native Markdown)
@@ -96,6 +95,7 @@ $\mathbf{x}$
 ```
 
 **Fix**: After generating `slides.md`, run:
+
 ```
 Find: \$ (.+?) \$
 Replace: $\1$
@@ -119,19 +119,15 @@ Markdown tables and HTML tags **cannot use `$$...$$` display math**, or they wil
 | DDIM | $\displaystyle x_{t-1} = \frac{\alpha_{t-1}}{\alpha_t}x_t + \sigma_{t-1}\epsilon_\theta$ |
 ```
 
-**Rule 2: Replace `|` with `\vert` in table formulas (CRITICAL)**
-
-**Root cause:** Markdown table parsers process `|` as column separators BEFORE recognizing `$...$` math delimiters. Even `|` inside `$...$` will be treated as a table column separator, causing the cell to be split incorrectly and the formula to display as garbled text.
+**Rule 2: Replace `|` with `\vert` in table formulas**
 
 ```markdown
-<!-- ❌ WRONG: | inside $...$ is treated as table separator -->
-| $\mathbf{x}_{T|t_n}$ | Conditional distribution |   ← THIS BREAKS THE TABLE
+<!-- ❌ WRONG: | conflicts with table column separator -->
+| $\mathbf{x}_{T|t_n}$ | Conditional distribution |
 
 <!-- ✅ CORRECT: use \vert -->
 | $\mathbf{x}_{T\vert t_n}$ | Conditional distribution |
 ```
-
-**Checklist:** In every table cell that contains a formula, scan for `|` characters and replace ALL of them with `\vert`. This applies to complex formulas with subscript pipes like `\mathbf{x}_{0|\overline{\sigma}_n}` → `\mathbf{x}_{0\vert\overline{\sigma}_n}`.
 
 **Rule 3: No line breaks `\\` or alignment `&` in table cells**
 
@@ -200,13 +196,13 @@ Use `---` for section dividers within a slide. **No `<hr>` tags.**
 
 ### 7. Forbidden HTML Tags
 
-| Tag | Replacement |
-|-----|-------------|
-| `<br>` | Blank line or two trailing spaces |
-| `<img>` | `![](path)` |
-| `<hr>` | `---` |
-| `<p>` | Markdown paragraph (blank line) |
-| `<span>` | Direct Markdown text |
+| Tag      | Replacement                         |
+| -------- | ----------------------------------- |
+| `<br>`   | Blank line or two trailing spaces   |
+| `<img>`  | `![](path)`                         |
+| `<hr>`   | `---`                               |
+| `<p>`    | Markdown paragraph (blank line)     |
+| `<span>` | Direct Markdown text                |
 | `<font>` | Not needed; Slidev defaults suffice |
 
 ### 8. Slide Length Budget
@@ -225,35 +221,84 @@ Use `---` for section dividers within a slide. **No `<hr>` tags.**
 
 If no Slidev project exists, initialize one:
 
-1. **Check for `slides.md`** (Slidev project marker)
-   - Exists → use it, go to Step 2
-   - Does not exist → create new folder and initialize
+1. **Handle arXiv source archive** (`.tar.gz`, `.zip`, etc.):
 
-2. **Initialize** (prefer global install, fall back to local):
+   - Check if the provided source path is an archive (ends with `.tar.gz`, `.tgz`, `.zip`)
+
+   - If it is an archive, extract it to a dedicated `paper_source/` folder:
+
+     ```bash
+     # Create paper_source folder for the extracted source
+     mkdir -p paper_source
+     
+     # Extract based on file extension
+     tar -xzf <arxiv-file>.tar.gz -C paper_source/   # for .tar.gz
+     unzip <arxiv-file>.zip -d paper_source/          # for .zip
+     
+     # After extraction, paper_source/ contains .tex files and figures/ etc.
+     ```
+
+   - From this point, the "source path" refers to the `paper_source/` directory
+
+   - **Note**: `paper_source/` is for source material only — the slides project will be in a **separate folder** (see next step)
+
+2. **Create a separate slides project folder** (sibling to `paper_source/`):
+
+   ```bash
+   # Create slides project folder next to paper_source/
+   mkdir -p rex-seminar
+   cd rex-seminar
+   ```
+
+   - The slides folder is a sibling of `paper_source/`, keeping them independent
+   - Benefit: extracted source is read-only material; the slides project stays clean
+
+3. **Check environment** (prefer global install, fall back to local):
+
    ```bash
    # Check if global slidev is available
    slidev --version 2>/dev/null || npm install -g @slidev/cli @slidev/theme-default playwright-chromium
-
-   # Create project structure
-   mkdir -p project-name
-   cd project-name
    ```
 
-3. **Create `figures/` folder** (single image directory):
+4. **Create `figures/` folder** (single image directory):
+
    ```bash
    mkdir -p figures
    ```
 
-4. **Delete `public/` folder** (if auto-generated during init):
-   ```bash
-   rm -rf public 2>/dev/null
-   ```
-   The project maintains only one `figures/` folder as the unified image directory.
+5. **Create `styles/` directory with global scrollbar CSS** (ensures all slides are scrollable):
 
-5. **Create `.gitignore`**:
+   ```bash
+   mkdir -p styles
+   cat > styles/index.css << 'EOF'
+   .slidev-slide-container { overflow: visible !important; }
+   .slidev-slide-content { overflow: visible !important; }
+   .slidev-page { overflow-y: scroll !important; }
+   EOF
+   ```
+
+   Slidev auto-loads `styles/index.css` as a global stylesheet.
+
+6. **Clean up non-essential files and directories**:
+
+   ```bash
+   rm -rf public node_modules dist 2>/dev/null
+   ```
+
+   **Note:** After creating the slides project, `node_modules/`, `dist/`, `public/`, and `styles/` are all build artifacts or helper files — **not required for the final deliverable**. The only essential files are `slides.md` + `figures/`.
+
+   - `node_modules/` — npm dependencies (re-creatable via `npm install`)
+   - `dist/` — `slidev build` output
+   - `public/` — Slidev default static directory (we use `figures/` instead)
+   - `styles/` — global CSS helper (keep if you want scrollbars, but not a deliverable)
+
+7. **Create `.gitignore`**:
+
    ```
    node_modules/
    dist/
+   public/
+   styles/
    .DS_Store
    *.log
    ```
@@ -261,6 +306,8 @@ If no Slidev project exists, initialize one:
 ### Step 2: Read & Analyze LaTeX Source
 
 1. Locate the main `.tex` file (typically `icml_camera_ready.tex`, `neurips_2025.tex`, `main.tex`, etc.)
+   - If extracted to `paper_source/`, the source path is `../paper_source/`
+   - If a folder was provided directly, use that folder path
 
 2. **Scan paper structure** using Grep/Read:
    - `\begin{abstract}` ... `\end{abstract}` → Abstract
@@ -284,6 +331,7 @@ This is critical for correct Markdown output.
 1. **Locate the preamble**: Find everything before `\begin{document}` in the main `.tex` file, plus all files loaded via `\input{}` or `\include{}` (e.g., `preamble.tex`, `defs.tex`, `macros.tex`).
 
 2. **Extract custom commands** from the preamble:
+
    - `\newcommand{\...}{...}`
    - `\newcommand*{\...}{...}`
    - `\renewcommand{\...}{...}`
@@ -292,11 +340,13 @@ This is critical for correct Markdown output.
    - `\let\...\...` — command alias
 
 3. **Focus on these command types**:
+
    - **Math symbol shorthands**: e.g., `\newcommand{\bX}{\mathbf{X}}`, `\newcommand{\hatY}{\hat{Y}}`, `\newcommand{\cA}{\mathcal{A}}`
    - **Operators**: e.g., `\DeclareMathOperator{\KL}{KL}`
    - **Paper-specific symbols**: e.g., `\newcommand{\s}{\boldsymbol{s}_\theta}`, `\newcommand{\ep}{\boldsymbol{\epsilon}}`
 
 4. **Build a replacement map**:
+
    ```
    \bX → \mathbf{X}
    \hatY → \hat{Y}
@@ -306,11 +356,13 @@ This is critical for correct Markdown output.
    ```
 
 5. **Apply replacements in `slides.md`**:
+
    - Replace all custom LaTeX commands with KaTeX-compatible standard commands
    - Handle recursive expansion (e.g., `\newcommand{\bX}{\mathbf{X}}` referenced by `\newcommand{\X}{\bX}`)
    - Expand nested commands down to the lowest-level standard commands
 
 6. **Verify replacements**:
+
    - Check that all replaced formulas render correctly in KaTeX
    - `\boldsymbol{}` is supported by KaTeX (keep as-is)
    - `\mathcal{}`, `\mathbb{}`, `\mathfrak{}` are all KaTeX-compatible
@@ -320,38 +372,50 @@ This is critical for correct Markdown output.
 1. Locate the paper's `figures/` folder (may also be `fig/`, `images/`, `imgs/`, etc.)
 
 2. Identify PPT-worthy figures:
+
    - Architecture diagrams (network structures, flowcharts)
    - Experimental plots (line charts, bar charts, heatmaps)
    - Comparison result tables
    - Algorithm illustrations (TikZ or drawn)
 
 3. **Recursively copy the entire figures folder, preserving subdirectory structure**:
+
    ```bash
-   cp -r <paper-path>/figures/* figures/
+   # If extracted to paper_source/ (sibling of slides project)
+   cp -r ../paper_source/figures/* figures/
+   
+   # If a source folder path was provided directly
+   cp -r <source-folder>/figures/* figures/
    ```
+
    This ensures:
+
    - If the paper has subdirectories (e.g., `figures/uncond_sampling/`, `figures/cond_sampling/`), they are preserved
    - No filename collisions across subdirectories
    - Easy path distinction in `slides.md`
 
 4. **Image paths in `slides.md`**:
+
    ```markdown
    <!-- No subdirectory -->
    ![](./figures/fig2_overview.png)
-
+   
    <!-- With subdirectories -->
    ![](./figures/uncond_sampling/ddim_celebhq.png)
    ![](./figures/cond_sampling/50/rex_rk4/sample.png)
    ```
+
    Ensure every `./figures/...` path matches the actual directory structure exactly (case-sensitive).
 
 5. **Important principle: All images must come from the original paper — do NOT draw any diagrams or flowcharts yourself.**
+
    - Use existing architecture diagrams, comparison figures, and experiment curves directly
    - Re-present tables as native Markdown tables, not screenshots
    - For TikZ-drawn figures: check for standalone `.tex` files in `tikz/` subdirectory, try compiling independently, or extract from the compiled PDF
    - **Do NOT** use third-party drawing tools (draw.io, Figma, PPT, etc.) to create any diagrams
 
 6. **TikZ figures** (supplementary):
+
    - For TikZ figures that cannot be extracted, describe them in text only
    - Do NOT draw ASCII art or hand-drawn replacements
 
@@ -359,58 +423,67 @@ This is critical for correct Markdown output.
 
 Standard structure (40-60 slides):
 
-| Section | Slides | Content |
-|---------|--------|---------|
-| **Cover** | 1 | Title, authors, venue, date |
-| **Outline** | 1 | Table of contents |
-| **Task Intro** | 1-2 | Problem context, applications (for non-expert audience) |
-| **Background** | 2-3 | Limitations of existing work, motivation |
-| **Contributions** | 1 | Summary of core contributions |
-| **Preliminaries** | 3-5 | Prerequisites, notation, background algorithms |
-| **Method** | 8-15 | Core algorithm, math derivations, theoretical analysis |
-| **Related Work** | 2-3 | Comparison methods, formula comparison, summary table |
-| **Experiments** | 5-10 | Setup, quantitative/qualitative results, ablations |
-| **Conclusion** | 1-2 | Summary and future work |
-| **References** | 1 | Key references |
-| **Thank You** | 1 | Q&A |
+| Section           | Slides | Content                                                 |
+| ----------------- | ------ | ------------------------------------------------------- |
+| **Cover**         | 1      | Title, authors, venue, date                             |
+| **Outline**       | 1      | Table of contents                                       |
+| **Task Intro**    | 1-2    | Problem context, applications (for non-expert audience) |
+| **Background**    | 2-3    | Limitations of existing work, motivation                |
+| **Contributions** | 1      | Summary of core contributions                           |
+| **Preliminaries** | 3-5    | Prerequisites, notation, background algorithms          |
+| **Method**        | 8-15   | Core algorithm, math derivations, theoretical analysis  |
+| **Related Work**  | 2-3    | Comparison methods, formula comparison, summary table   |
+| **Experiments**   | 5-10   | Setup, quantitative/qualitative results, ablations      |
+| **Conclusion**    | 1-2    | Summary and future work                                 |
+| **References**    | 1      | Key references                                          |
+| **Thank You**     | 1      | Q&A                                                     |
 
 ### Step 6: Write slides.md
 
 Follow the **Format Specification** rules. Content guidelines per section:
 
 #### Cover
+
 - Paper title (original)
 - Authors, affiliation
 - Venue, year
 - "Seminar · YYYY/MM/DD"
 
 #### Task Introduction (Critical!)
+
 Before diving into background, set context for non-expert audience:
+
 - What problem is this?
 - Why does it matter?
 - Concrete application examples
 
 #### Background & Motivation
+
 - Limitations of existing approaches (red callout box)
 - Why this paper's method is needed
 
 #### Contributions
+
 - Numbered list of 3-4 core contributions
 
 #### Method (Core Section)
+
 Page-by-page detailed exposition:
+
 - **Each formula** with explanation of its physical/mathematical meaning
 - **Key theorems** in blue info boxes
 - **Important corollaries** in green result boxes
 - Each major step gets its own slide
 
 #### Experiments
+
 - Overview table (dataset, model, metrics, key findings)
 - Each experiment on its own slide(s)
 - Quantitative results in tables, qualitative in image comparisons
 - Key findings in green callout boxes
 
 #### Conclusion
+
 - Bullet points summarizing contributions and findings
 - Bullet points for future work
 
@@ -441,6 +514,7 @@ grep -o '\$[^$]*\$' slides.md | wc -l
 Ensure the count stays the same (no incorrect splitting of formulas that contain `$` internally).
 
 #### Note
+
 - This only removes one space on each side of `$`; internal spaces in the formula are untouched
 - Manually spot-check 3-5 complex formulas after the fix
 
@@ -466,6 +540,7 @@ cd <project> && slidev build slides.md 2>&1
 ### Step 3: Fix errors
 
 If build fails, locate KaTeX parse errors. Common issues:
+
 - `$` still has surrounding spaces → re-run sed from Step 1
 - Unexpanded LaTeX custom commands → check Step 3 replacement map
 - Special characters (`&`, `\\`, `\|`, `_`) → fix manually
@@ -478,6 +553,7 @@ If build fails, locate KaTeX parse errors. Common issues:
 ### Step 6: Spot-check formula rendering
 
 Open `dist/index.html` (or run `slidev slides.md` dev server). Check 3-5 formula-heavy slides:
+
 - No literal `$ ... $` or `$$` text visible
 - All inline and display math renders as proper mathematical symbols
 
@@ -486,11 +562,13 @@ Open `dist/index.html` (or run `slidev slides.md` dev server). Check 3-5 formula
 ## Troubleshooting
 
 ### Q1: Images not displaying
+
 - `./figures/xxx.png` must match the actual file path (case-sensitive)
 - Check `figures/` directory exists and filenames match
 - Only one `figures/` folder — no `public/` directory
 
 ### Q2: Formulas showing as literal `$$` text
+
 **Most common causes (in order):**
 
 1. **`$ content $` has spaces inside** ← most frequent
@@ -513,29 +591,47 @@ Open `dist/index.html` (or run `slidev slides.md` dev server). Check 3-5 formula
    - Fix: Check preamble for `\newcommand` etc.
    - See: Step 3
 
-### Q3: Slide content clipped
-**No extra handling needed.** The frontmatter already includes:
+### Q3: Slide content clipped / Scrollbar not showing
+
+Create `styles/index.css` in the project directory (Slidev loads it automatically):
+
 ```css
-<style>
-.slidev-page { overflow-y: auto !important; }
-</style>
+.slidev-slide-container { overflow: visible !important; }
+.slidev-slide-content { overflow: visible !important; }
+.slidev-page { overflow-y: scroll !important; }
 ```
-This auto-adds scrollbars when content overflows. If a slide still feels crowded, split it (15-20 lines per slide).
+
+Also add to the frontmatter `head:` field as a supplement:
+
+```yaml
+head:
+  - style: |
+      .slidev-page, .slidev-slide-content { overflow-y: scroll !important; }
+```
+
+**Do NOT use a `<style>` block in slides.md**: Slidev compiles it as a Vue scoped style (adding `data-v-*` attribute selectors) that won't match the actual DOM elements.
+
+**Setting `overflow-y` alone is insufficient**: Slidev defaults hide overflow on both `.slidev-slide-container` and `.slidev-slide-content` via `overflow: hidden`. You must set them to `overflow: visible` first, then add `overflow-y: scroll` on the outermost `.slidev-page`.
 
 ### Q4: `slidev` command not found
+
 ```bash
 npm install -g @slidev/cli
 ```
+
 Verify: `slidev --version`
 
 ### Q5: PDF export
+
 ```bash
 cd <project>
 slidev export slides.md
 ```
+
 Requires `playwright-chromium` (install globally).
 
 ### Q6: All images from the original paper?
+
 **Yes.** This skill strictly follows "all figures from original paper materials only." No self-drawn diagrams, no third-party drawing tools.
 
 ---
